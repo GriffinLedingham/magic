@@ -26,7 +26,7 @@ module.exports = function Deck(deckString)
 			//Sideboard
 			else
 			{
-				//TODO: Add Sideboard
+				//TODO: Add Sideboard parsing - very low priority
 			}
 		}
 		return formatted_deck;
@@ -51,6 +51,10 @@ module.exports = function Deck(deckString)
 		this.size = this.cards.length;
 	};
 
+	this.getCount = function() {
+		return this.cards.length;
+	}
+
 	this.getCards = function() {
 		var result_deck = [];
 		for(card in this.cards)
@@ -64,12 +68,7 @@ module.exports = function Deck(deckString)
 		var result_deck = [];
 		for(card in this.cards)
 		{
-			var simple_card = {};
-			var full_card = this.card_hash[this.cards[card]];
-
-			simple_card.name = full_card.name;
-			simple_card.imageName = full_card.imageName;
-			simple_card.uuid = card;
+			var simple_card = this.getSimpleCardByUUID(this.cards[card]);
 
 			result_deck.push(simple_card);
 		}
@@ -86,7 +85,7 @@ module.exports = function Deck(deckString)
 
 		simple_card.name = full_card.name;
 		simple_card.imageName = full_card.imageName;
-		simple_card.uuid = card;
+		simple_card.uuid = hash_id;
 
 		return simple_card;
 	};
@@ -97,7 +96,6 @@ module.exports = function Deck(deckString)
 
 	this.drawCard = function() {
 		var card = this.cards.pop();
-		console.log(this.cards.length);
 		return card;
 	};
 

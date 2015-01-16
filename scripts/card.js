@@ -9,43 +9,24 @@ module.exports = function Card(name)
 
 	this.initialized = false;
 
-	//name 			- String: 	"Arbor Elf"
 	this.name = "";
-	//manaCost 		- String: 	"{G}""
     this.manaCost = "";
-    //cmc 			- Int: 		1
 	this.cmc = 0;
-	//colors 		- Array: 	["Green"]
     this.colors = [];
-    //type 			- String: 	"Creature - Elf Druid"
     this.type = "";
-    //supertypes	- Array: 	[]
     this.supertypes = [];
-    //types 		- Array: 	["Creature"]
 	this.types = [];
-	//subtypes		- Array: 	["Elf", "Druid"]
     this.subtypes = [];
-    //rarity		- String	"Common"
     this.rarity = "";
-    //text			- String 	"" NOTE: This is the creature's effect which will be handled in a per card script
     this.text = "";
-    //flavor		- String	"The forest will surround you with its life if you are still and calm."
     this.flavor = "";
-    //artist		- String 	"rk post"
     this.artist = "";
-    //number		- String	"160"
     this.number = "";
-    //power			- String 	"1"
     this.power = "";
-    //toughness		- String	"1"
     this.toughness = "";
-    //layout		- String 	"normal"
     this.layout = "";
-    //multiverseid	- Int 		249840
     this.multiverseid = 0;
-    //set 			- String 	"M12"
     this.set = "";
-    //imageName		- String	"arbor elf"
     this.imageName = "";
 
 	this.init = function(name){

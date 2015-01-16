@@ -29,6 +29,8 @@ io.sockets.on('connection', function (socket) {
 		
 		player.buildDeck(deck);
 		player.shuffleDeck();
+		
+		player.updateClientData({'hand':true,'battlefield':true,'mana':true});
 	});
 
 	socket.on('draw_card', function(){
@@ -37,5 +39,13 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('shuffle_hand_to_deck', function(){
 		player.shuffleHandToDeck();
+	});
+
+	socket.on('discard_hand', function(){
+		player.discardHand();
+	});
+
+	socket.on('play_card', function(card_uuid){
+		player.playCard(card_uuid);
 	});
 });
