@@ -1,0 +1,42 @@
+{
+	"cards" : [
+		{
+			"layout":"normal",
+			"type":"Creature — Spirit",
+			"types":["Creature"],"colors":["Black"],"multiverseid":383175,"name":"Accursed Spirit",
+			"subtypes":["Spirit"],"originalType":"Creature — Spirit",
+			"cmc":4,"rarity":"Common",
+			"artist":"Kev Walker",
+			"power":"3",
+			"toughness":"2",
+			"manaCost":"{3}{B}",
+			"text":"Intimidate (This creature can't be blocked except by artifact creatures and/or creatures that share a color with it.)",
+			"originalText":"Intimidate (This creature can't be blocked except by artifact creatures and/or creatures that share a color with it.)",
+			"flavor":"Many have heard the slither of dragging armor and the soft squelch of its voice. But only its victims ever meet its icy gaze.",
+			"number":"85",
+			"imageName":"accursed spirit",
+			"foreignNames":[{"language":"Chinese Traditional",
+			"name":"厄運鬼魂"},{"language":"Chinese Simplified",
+			"name":"厄运鬼魂"},{"language":"French",
+			"name":"Esprit maudit"},{"language":"German",
+			"name":"Fluchbeladener Geist"},{"language":"Italian",
+			"name":"Spirito Maledetto"},{"language":"Japanese",
+			"name":"呪われたスピリット"},{"language":"Korean",
+			"name":"저주받은 신령"},{"language":"Portuguese",
+			"name":"Espírito Amaldiçoado"},{"language":"Portuguese (Brazil)",
+			"name":"Espírito Amaldiçoado"},{"language":"Russian",
+			"name":"Проклятый Дух"},{"language":"Spanish",
+			"name":"Espíritu maldito"}],"legalities":{"Standard":"Legal",
+			"Modern":"Legal",
+			"Legacy":"Legal",
+			"Vintage":"Legal",
+			"Freeform":"Legal",
+			"Prismatic":"Legal",
+			"Tribal Wars Legacy":"Legal",
+			"Tribal Wars Standard":"Legal",
+			"Singleton 100":"Legal",
+			"Commander":"Legal"},"printings":["Magic 2014 Core Set",
+			"Magic 2015 Core Set"]
+		}
+	]
+}
