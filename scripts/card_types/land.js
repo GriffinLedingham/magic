@@ -1,6 +1,6 @@
+var Components = require('../components.js');
+
 module.exports = 
 {
-	cast: function(){
-		console.log('Land!');
-	}
+	cast: Components.playToField
 }

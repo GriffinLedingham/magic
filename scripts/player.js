@@ -71,6 +71,9 @@ module.exports = function Player(socket)
 				//TODO: Resolve card's cast effect function
 
 				//Temporary: Place card on battlefield if mana sufficient
+
+				card_to_cast.cast();
+
 				this.updateClientData({'hand':true,'battlefield':true,'mana':true});
 			}
 		}

@@ -1,6 +1,6 @@
+var Components = require('../components.js');
+
 module.exports = 
 {
-	cast: function(){
-		console.log('Creature card!');
-	}
+	cast: Components.castToStack
 }
