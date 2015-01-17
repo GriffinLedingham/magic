@@ -1,11 +1,8 @@
-module.exports = function Stack(player_one_socket, player_two_socket)
-{
-	this.player_one_socket = player_one_socket;
-	this.player_one_id = player_one_socket.id;
-	
-	this.player_two_socket = player_two_socket;
-	this.player_two_id = player_two_socket.id;
-	
+module.exports = function Stack(player_one_id, player_two_id)
+{	
+	this.player_one_id = player_one_id;
+	this.player_two_id = player_two_id;
+
 	this.triggers = [];
 
 	//Push simplified cards onto stack (name, image, resolve function, uuid)

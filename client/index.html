@@ -7,24 +7,43 @@
         <script src="./vendor/jquery-min.js" type="text/javascript"></script>
         <script src="./script/app.js" type="text/javascript"></script>
         <script src="http://localhost:3000/socket.io/socket.io.js" type="text/javascript"></script>
+        <link rel="stylesheet" type="text/css" href="./css/style.css">
     </head>
     <body onload="init();">
-        <div id="player_hand" style="display:block;position:fixed;bottom:10px;left:10px;width: 1120px;">Hand:<div id="hand_cards"></div></div>
-        <div id="player_graveyard" style="display:none;position:fixed;bottom:10px;left:10px;width: 1120px;">Graveyard:<div id="graveyard_cards"></div></div>
-        <div id="player_deck" style="display:block;position:fixed;bottom:250px;right:10px;">Deck: <span id="deck_count"></span><div id="deck_cards"><img src="http://mtgimage.com/card/cardback.jpg" style="height:200px;" /></div></div>
-        <div id="player_battlefield" style="position:fixed;top:130px;left:10px;">Battlefield:<div id="battlefield_cards"></div></div>
-        <div id="player_graveyard_single" style="display:block;position:fixed;bottom:10px;right:10px">Graveyard: <span id="graveyard_count">0</span><div id="graveyard_top_card"></div></div>
-        <div id="draw_button" style="position:fixed;top:10px;left:10px;background:blue;height:100px;width:100px;color:white;">Draw Card</div>
-        <div id="shuffle_hand_button" style="position:fixed;top:10px;left:120px;background:red;height:100px;width:100px;color:white;">Shuffle Hand</div>
-        <div id="discard_hand_button" style="position:fixed;top:10px;left:230px;background:purple;height:100px;width:100px;color:white;">Discard Hand</div>
-        <div id="show_graveyard_button" style="position:fixed;top:10px;left:340px;background:black;height:100px;width:100px;color:white;">Show Graveyard</div>
-        <div id="show_hand_button" style="position:fixed;top:10px;left:450px;background:green;height:100px;width:100px;color:white;">Show Hand</div>
-        <div id="player_mana_container" style="position:fixed;top:10px;right:10px;height:200px;">
-            <span id="player_white_mana"></span><img src="http://mtgjson.com/images/w.png" /><br>
-            <span id="player_blue_mana"></span><img src="http://mtgjson.com/images/u.png" /><br>
-            <span id="player_black_mana"></span><img src="http://mtgjson.com/images/b.png" /><br>
-            <span id="player_red_mana"></span><img src="http://mtgjson.com/images/r.png" /><br>
-            <span id="player_green_mana"></span><img src="http://mtgjson.com/images/g.png" /><br>
+        <div id="opponent_board" style="width:100%;position:absolute;top:0px;left:0px;height:400px;transform:rotate(180deg);">
+            <div id="opponent_hand" style="display:block;position:inherit;bottom:10px;left:10px;width: 1120px;">Hand:<div id="opponent_hand_cards"></div></div>
+            <div id="opponent_graveyard" style="display:none;position:inherit;bottom:10px;left:10px;width: 1120px;">Graveyard:<div id="opponent_graveyard_cards"></div></div>
+            <div id="opponent_deck" style="display:block;position:fixed;bottom:250px;right:10px;">Deck: <span id="opponent_deck_count"></span><div id="opponent_deck_cards"><img src="http://mtgimage.com/card/cardback.jpg" style="height:100px;" /></div></div>
+            <div id="opponent_battlefield" style="position:inherit;top:130px;left:10px;">Battlefield:<div id="opponent_battlefield_cards"></div></div>
+            <div id="opponent_graveyard_single" style="display:block;position:fixed;bottom:10px;right:10px">Graveyard: <span id="opponent_graveyard_count">0</span><div id="opponent_graveyard_top_card"></div></div>
+            <div id="opponent_mana_container" style="position: absolute;top: 10px;height: 200px;right: 100px;transform:rotate(180deg);">
+                <span id="opponent_white_mana"></span><img src="http://mtgjson.com/images/w.png" /><br>
+                <span id="opponent_blue_mana"></span><img src="http://mtgjson.com/images/u.png" /><br>
+                <span id="opponent_black_mana"></span><img src="http://mtgjson.com/images/b.png" /><br>
+                <span id="opponent_red_mana"></span><img src="http://mtgjson.com/images/r.png" /><br>
+                <span id="opponent_green_mana"></span><img src="http://mtgjson.com/images/g.png" /><br>
+            </div>
+        </div>
+
+        <div id="player_board" style="width:100%;display:block;position:absolute;bottom:0px;left:0px;height:400px;">
+            <div id="player_hand" style="display:block;position:inherit;bottom:10px;left:10px;width: 1120px;">Hand:<div id="hand_cards"></div></div>
+            <div id="player_graveyard" style="display:none;position:inherit;bottom:10px;left:10px;width: 1120px;">Graveyard:<div id="graveyard_cards"></div></div>
+            <div id="player_deck" style="display:block;position:fixed;bottom:250px;right:10px;">Deck: <span id="deck_count"></span><div id="deck_cards"><img src="http://mtgimage.com/card/cardback.jpg" style="height:100px;" /></div></div>
+            <div id="player_battlefield" style="position:inherit;top:130px;left:10px;">Battlefield:<div id="battlefield_cards"></div></div>
+            <div id="player_graveyard_single" style="display:block;position:fixed;bottom:10px;right:10px">Graveyard: <span id="graveyard_count">0</span><div id="graveyard_top_card"></div></div>
+            <!-- <div id="draw_button" style="position:inherit;top:10px;left:10px;background:blue;height:100px;width:100px;color:white;">Draw Card</div>
+            <div id="shuffle_hand_button" style="position:inherit;top:10px;left:120px;background:red;height:100px;width:100px;color:white;">Shuffle Hand</div>
+            <div id="discard_hand_button" style="position:inherit;top:10px;left:230px;background:purple;height:100px;width:100px;color:white;">Discard Hand</div>
+            <div id="show_graveyard_button" style="position:inherit;top:10px;left:340px;background:black;height:100px;width:100px;color:white;">Show Graveyard</div>
+            <div id="show_hand_button" style="position:inherit;top:10px;left:450px;background:green;height:100px;width:100px;color:white;">Show Hand</div> -->
+            <div id="end_turn_button" style="display:none;position:inherit;top:10px;left:560px;background:yellow;height:100px;width:100px;color:black;">End Turn</div>
+            <div id="player_mana_container" style="position: absolute;top: 10px;height: 200px;right: 100px;">
+                <span id="player_white_mana"></span><img src="http://mtgjson.com/images/w.png" /><br>
+                <span id="player_blue_mana"></span><img src="http://mtgjson.com/images/u.png" /><br>
+                <span id="player_black_mana"></span><img src="http://mtgjson.com/images/b.png" /><br>
+                <span id="player_red_mana"></span><img src="http://mtgjson.com/images/r.png" /><br>
+                <span id="player_green_mana"></span><img src="http://mtgjson.com/images/g.png" /><br>
+            </div>
         </div>
     </body>
 </html>

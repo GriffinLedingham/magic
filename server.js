@@ -14,38 +14,57 @@ io.set('log level', 0);
 
 var Card = require('./scripts/card');
 var Player = require('./scripts/player');
+var Game = require('./scripts/game');
+
+var lobby = [];
 
 io.sockets.on('connection', function (socket) {
-	var player = new Player(socket);
+	socket.player = new Player(socket);
+	socket.current_game = false;
+
+	var player = socket.player;
+
+	socket.emit('set_user_id', socket.id);
 
 	socket.on('get_deck',function(){
-		var decks = fs.readdirSync('./data/decks');
-
-		//Pick a random deck from the directory
-		var deck_to_use = decks[Math.floor(Math.random()*decks.length)];
-
-		//Read in the deck
-		var deck = fs.readFileSync('./data/decks/' + deck_to_use, 'utf8');
-		
-		player.buildDeck(deck);
-		player.shuffleDeck();
-		
-		player.updateClientData({'hand':true,'battlefield':true,'mana':true});
+		lobby.push(socket);
+		startGame();
 	});
 
 	socket.on('draw_card', function(){
-		player.drawCard();
+		socket.current_game.drawCard(socket.id);
 	});
 
 	socket.on('shuffle_hand_to_deck', function(){
-		player.shuffleHandToDeck();
+		socket.current_game.shuffleHandToDeck(socket.id);
 	});
 
 	socket.on('discard_hand', function(){
-		player.discardHand();
+		socket.current_game.discardHand(socket.id);
 	});
 
 	socket.on('play_card', function(card_uuid){
-		player.playCard(card_uuid);
+		socket.current_game.castCard(card_uuid, socket.id);
+	});
+
+	socket.on('tap_card', function(card_uuid){
+		socket.current_game.tapCard(card_uuid, socket.id);
+	});
+
+	socket.on('end_turn', function() {
+		socket.current_game.endTurn(socket.id);
 	});
 });
+
+function startGame() {
+	if(lobby.length == 2)
+	{
+		var socket_one = lobby.pop();
+		var socket_two = lobby.pop();
+
+		var new_game = new Game(socket_one.player, socket_two.player);
+
+		socket_one.current_game = new_game;
+		socket_two.current_game = new_game;
+	}
+}

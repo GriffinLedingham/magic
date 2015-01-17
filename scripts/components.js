@@ -4,5 +4,5 @@ module.exports.castToStack = function() {
 };
 
 module.exports.playToField = function() {
-	console.log('Plaing to field');
+	console.log('Playing ' + this.name + ' to field');
 };

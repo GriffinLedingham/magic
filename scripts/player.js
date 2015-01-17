@@ -9,76 +9,146 @@ module.exports = function Player(socket)
 	this.deck;
 	this.hand;
 	this.graveyard = [];
-	this.battlefield = [];
+	this.battlefield = {};
 
-	//Temporary beginner mana for cast testing
-	//Should be initialized to 0's
 	this.mana_pool = {'white':3,'blue':0,'black':0,'red':3,'green':1,'colorless':0};
 
+	/**
+	 * [init description]
+	 * @param  {Socket} 	socket
+	 */
 	this.init = function(socket) {
 		this.socket = socket;
 		this.id = socket.id;
 		this.hand = [];
 	};
 
+	/**
+	 * [buildDeck description]
+	 * @param  {String} 	deskString 
+	 */
 	this.buildDeck = function(deckString) {
 		this.deck = new Deck(deckString);
-		this.updateClientData({'library':true});
 	};
 
-	this.getFullDeck = function() {
-		return this.deck.getCards();
-	};
-
-	this.getSimpleDeck = function() {
-		return this.deck.getSimpleDeck();
-	};
-
-	this.shuffleDeck = function() {
-		return this.deck.shuffleDeck();
-	};
-
-	this.shuffleHandToDeck = function() {
-		this.deck.shuffleCardsIn(this.hand);
-		this.hand = [];
-		this.updateClientData({'hand':true, 'library':true});
-	};
-
-	this.discardHand = function() {
-		this.graveyard = this.graveyard.concat(this.hand);
-		this.hand = [];
-		this.updateClientData({'hand':true, 'graveyard':true});
-	};
-
+	/**
+	 * [drawCard description]
+	 */
 	this.drawCard = function() {
 		var card_uuid = this.deck.drawCard();
 		this.hand.push(card_uuid);
-		this.updateClientData({'hand':true, 'library':true});
 	};
 
+	/**
+	 * [drawCards description]
+	 * @param  {Int} 	num
+	 */
+	this.drawCards = function(num) {
+		for(var i = 0;i<num;i++)
+		{
+			this.drawCard();
+		}
+	};
+
+	/**
+	 * [shuffleHandToDeck description]
+	 */
+	this.shuffleHandToDeck = function() {
+		this.deck.shuffleCardsIn(this.hand);
+		this.hand = [];
+	};
+
+	/**
+	 * [discardHand description]
+	 */
+	this.discardHand = function() {
+		this.graveyard = this.graveyard.concat(this.hand);
+		this.hand = [];
+	};
+
+	/**
+	 * [tapCard description]
+	 * @param  {String} 	card_uuid
+	 */
+	this.tapCard = function(card_uuid) {
+		if(typeof this.battlefield[card_uuid] != 'undefined')
+		{
+			var card_to_tap = this.battlefield[card_uuid];
+			card_to_tap.tapped = true;
+			this.battlefield[card_uuid] = card_to_tap;
+		}
+	};
+
+	/**
+	 * [untapCard description]
+	 * @param  {String} 	card_uuid
+	 */
+	this.untapCard = function(card_uuid) {
+		if(typeof this.battlefield[card_uuid] != 'undefined')
+		{
+			var card_to_untap = this.battlefield[card_uuid];
+			card_to_untap.tapped = false;
+			this.battlefield[card_uuid] = card_to_untap;
+		}
+	};
+
+	/**
+	 * [untapAllCards description]
+	 */
+	this.untapAllCards = function() {
+		for(card_uuid in this.battlefield)
+		{
+			var card_to_untap = this.battlefield[card_uuid];
+			card_to_untap.tapped = false;
+			this.battlefield[card_uuid] = card_to_untap;
+		}
+	};
+
+	/**
+	 * [playCard description]
+	 * @param  {String} 	card_uuid
+	 */
 	this.playCard = function(card_uuid) {
-		//TODO: Check mana here
 		if(this.hand.indexOf(card_uuid) != -1)
 		{
 			var card_to_cast = this.deck.getCardByUUID(card_uuid);
 			if(spendManaForCard(card_to_cast.manaCost, this.mana_pool, this))
 			{
-				this.battlefield.push(card_uuid);
+				this.battlefield[card_uuid] = {'tapped':false,'damage':0};
 				var index = this.hand.indexOf(card_uuid);
 				this.hand.splice(index, 1);
-
-				//TODO: Put the card on the stack
-				//TODO: Resolve card's cast effect function
-
-				//Temporary: Place card on battlefield if mana sufficient
-
 				card_to_cast.cast();
-
-				this.updateClientData({'hand':true,'battlefield':true,'mana':true});
 			}
 		}
 	};
 
+	/**
+	 * [getFullDeck description]
+	 * @return {Array} 	Player's current library
+	 */
+	this.getFullDeck = function() {
+		return this.deck.getCards();
+	};
+
+	/**
+	 * [getSimpleBattlefield description]
+	 * @return {Array}
+	 */
+	this.getSimpleBattlefield = function() {
+		return getSimpleBattlefield(this.battlefield, this.deck);
+	}
+
+	/**
+	 * [shuffleDeck description]
+	 */
+	this.shuffleDeck = function() {
+		this.deck.shuffleDeck();
+	};
+
+	/**
+	 * [updateClientData description]
+	 * @param  {Object} 	update_options
+	 */
 	this.updateClientData = function(update_options) {
 		var update_json = {};
 		
@@ -90,8 +160,14 @@ module.exports = function Player(socket)
 
 		if(typeof update_options['battlefield'] != 'undefined')
 		{
-			var simple_battlefield = getSimpleCards(this.battlefield, this.deck);
+			var simple_battlefield = getSimpleBattlefield(this.battlefield, this.deck);
 			update_json.battlefield = simple_battlefield;
+		}
+
+		if(typeof update_options['opponent_battlefield'] != 'undefined')
+		{
+			var simple_opp_battlefield = update_options['opponent_battlefield'];
+			update_json.opponent_battlefield = simple_opp_battlefield;
 		}
 
 		if(typeof update_options['mana'] != 'undefined')
@@ -111,12 +187,28 @@ module.exports = function Player(socket)
 			update_json.library = library_count;
 		}
 
+		if(typeof update_options['turn'] != 'undefined')
+		{
+			update_json.turn = update_options['turn'];
+		}
+
+		if(typeof update_options['priority'] != 'undefined')
+		{
+			update_json.priority = update_options['priority'];
+		}
+
 		socket.emit('update_data',JSON.stringify(update_json));
 	};
 
 	this.init(socket);
 }
 
+/**
+ * [getSimpleCards description]
+ * @param  {Array} 	cards
+ * @param  {Deck} 	deck
+ * @return {Array}
+ */
 function getSimpleCards(cards, deck)
 {
 	var simple_cards = [];
@@ -127,7 +219,35 @@ function getSimpleCards(cards, deck)
 	return simple_cards;
 }
 
+/**
+ * [getSimpleBattlefield description]
+ * @param  {Array} 	cards
+ * @param  {Deck} 	deck
+ * @return {Array}
+ */
+function getSimpleBattlefield(cards, deck)
+{
+	var simple_cards = [];
+	//for(var i = 0;i<cards.length;i++)
+	for(card_uuid in cards)
+	{
+		var simple_card = deck.getSimpleCardByUUID(card_uuid);
+		
+		var card_bf_object = cards[card_uuid];
+		simple_card.tapped = card_bf_object.tapped;
 
+		simple_cards.push(simple_card);
+	}
+	return simple_cards;
+}
+
+/**
+ * [spendManaForCard description]
+ * @param  {String} 	mana_cost
+ * @param  {Object} 	mana_pool
+ * @param  {Player} 	self
+ * @return {Bool}
+ */
 function spendManaForCard(mana_cost, mana_pool, self)
 {
 	mana_cost = mana_cost.replace(/G/g, 'green').replace(/R/g, 'red').replace(/W/g, 'white').replace(/U/g, 'blue').replace(/B/g, 'black');
@@ -173,6 +293,10 @@ function spendManaForCard(mana_cost, mana_pool, self)
 	return result;
 }
 
+/**
+ * [isNumber description]
+ * @return {Boolean}
+ */
 function isNumber(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
