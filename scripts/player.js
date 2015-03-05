@@ -4,7 +4,6 @@ var Deck = require('../scripts/deck');
 module.exports = function Player(socket)
 {
 	this.socket;
-	//functions specific to this card/type
 	this.id;
 	this.deck;
 	this.hand;
@@ -14,7 +13,8 @@ module.exports = function Player(socket)
 	this.mana_pool = {'white':3,'blue':0,'black':0,'red':3,'green':1,'colorless':0};
 
 	/**
-	 * [init description]
+	 * Initialize player object.
+	 * 
 	 * @param  {Socket} 	socket
 	 */
 	this.init = function(socket) {
@@ -24,7 +24,8 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * [buildDeck description]
+	 * Set the player's deck equal to the deck string passed in
+	 * 
 	 * @param  {String} 	deskString 
 	 */
 	this.buildDeck = function(deckString) {
@@ -32,7 +33,7 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * [drawCard description]
+	 * Draw a card from player's deck and put it in that player's hand
 	 */
 	this.drawCard = function() {
 		var card_uuid = this.deck.drawCard();
@@ -40,7 +41,8 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * [drawCards description]
+	 * Draw multiple cards, defined by num passed in
+	 * 
 	 * @param  {Int} 	num
 	 */
 	this.drawCards = function(num) {
@@ -51,7 +53,7 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * [shuffleHandToDeck description]
+	 * Shuffle the player's hand into their deck.
 	 */
 	this.shuffleHandToDeck = function() {
 		this.deck.shuffleCardsIn(this.hand);
@@ -59,7 +61,7 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * [discardHand description]
+	 * Place player's hand into the graveyard.
 	 */
 	this.discardHand = function() {
 		this.graveyard = this.graveyard.concat(this.hand);
@@ -67,7 +69,8 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * [tapCard description]
+	 * Tap target card passed through by card unique id.
+	 * 
 	 * @param  {String} 	card_uuid
 	 */
 	this.tapCard = function(card_uuid) {
@@ -80,7 +83,8 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * [untapCard description]
+	 * Untap target card passed through by card unique id.
+	 * 
 	 * @param  {String} 	card_uuid
 	 */
 	this.untapCard = function(card_uuid) {
@@ -93,7 +97,7 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * [untapAllCards description]
+	 * Untap all cards a player controls.
 	 */
 	this.untapAllCards = function() {
 		for(card_uuid in this.battlefield)
@@ -105,7 +109,9 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * [playCard description]
+	 * Play a card from the player's hand to the battlefield 
+	 * and spend corresponding mana to do so.
+	 * 
 	 * @param  {String} 	card_uuid
 	 */
 	this.playCard = function(card_uuid) {
@@ -123,7 +129,8 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * [getFullDeck description]
+	 * Return the player's full deck as an array (full card objects).
+	 * 
 	 * @return {Array} 	Player's current library
 	 */
 	this.getFullDeck = function() {
@@ -131,7 +138,8 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * [getSimpleBattlefield description]
+	 * Get array of this player's battlefield in the form of simplified cards.
+	 * 
 	 * @return {Array}
 	 */
 	this.getSimpleBattlefield = function() {
@@ -139,14 +147,19 @@ module.exports = function Player(socket)
 	}
 
 	/**
-	 * [shuffleDeck description]
+	 * Shuffle this player's deck.
 	 */
 	this.shuffleDeck = function() {
 		this.deck.shuffleDeck();
 	};
 
 	/**
-	 * [updateClientData description]
+	 * Send off packet of data updates through socket to client
+	 * Data packets are passed through in the options array.
+	 * 
+	 * Any new data to send to client in the update process must 
+	 * be added to this conditional check block.
+	 * 
 	 * @param  {Object} 	update_options
 	 */
 	this.updateClientData = function(update_options) {
@@ -197,16 +210,19 @@ module.exports = function Player(socket)
 			update_json.priority = update_options['priority'];
 		}
 
-		socket.emit('update_data',JSON.stringify(update_json));
+		this.socket.emit('update_data',JSON.stringify(update_json));
 	};
 
 	this.init(socket);
 }
 
 /**
- * [getSimpleCards description]
+ * Returns the passed in array of unique card ID's as 
+ * simplified versions of the cards.
+ * 
  * @param  {Array} 	cards
  * @param  {Deck} 	deck
+ * 
  * @return {Array}
  */
 function getSimpleCards(cards, deck)
@@ -220,9 +236,12 @@ function getSimpleCards(cards, deck)
 }
 
 /**
- * [getSimpleBattlefield description]
+ * Returns this player's battlefield as an 
+ * array of simplified card objects.
+ * 
  * @param  {Array} 	cards
  * @param  {Deck} 	deck
+ * 
  * @return {Array}
  */
 function getSimpleBattlefield(cards, deck)
@@ -242,10 +261,13 @@ function getSimpleBattlefield(cards, deck)
 }
 
 /**
- * [spendManaForCard description]
+ * Deplete mana from this player's mana pool used to
+ * pay the cost of a card.
+ * 
  * @param  {String} 	mana_cost
  * @param  {Object} 	mana_pool
  * @param  {Player} 	self
+ * 
  * @return {Bool}
  */
 function spendManaForCard(mana_cost, mana_pool, self)
@@ -294,7 +316,8 @@ function spendManaForCard(mana_cost, mana_pool, self)
 }
 
 /**
- * [isNumber description]
+ * Returns whether a value is numeric.
+ * 
  * @return {Boolean}
  */
 function isNumber(n) {

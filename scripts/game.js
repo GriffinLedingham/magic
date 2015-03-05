@@ -11,7 +11,8 @@ module.exports = function Game(player_one, player_two)
 	this.current_phase;
 
 	/**
-	 * [init description]
+	 * Start the game by setting the current turn and priority,
+	 * then calling setup player for both of those participating.
 	 * 
 	 * Set starting turn and priority, the set up both players for game
 	 */
@@ -24,7 +25,9 @@ module.exports = function Game(player_one, player_two)
 	};
 
 	/**
-	 * [tapCard description]
+	 * Tap a card by passed in unique card ID and user ID.
+	 * Both parameters must be supplied.
+	 * 
 	 * @param  {String} 	card_uuid
 	 * @param  {String} 		user_id
 	 */
@@ -34,7 +37,9 @@ module.exports = function Game(player_one, player_two)
 	};
 
 	/**
-	 * [untapCard description]
+	 * Untap a card by passed in unique card ID and user ID.
+	 * Both parameters must be supplied.
+	 * 
 	 * @param  {String} 	card_uuid
 	 * @param  {String} 	user_id
 	 */
@@ -44,7 +49,8 @@ module.exports = function Game(player_one, player_two)
 	};
 
 	/**
-	 * [drawCard description]
+	 * Target player draws a card from their deck into their hand.
+	 * 
 	 * @param  {String} 	user_id
 	 */
 	this.drawCard = function(user_id) {
@@ -53,7 +59,8 @@ module.exports = function Game(player_one, player_two)
 	};
 
 	/**
-	 * [shuffleHandToDeck description]
+	 * Target player shuffles their hand into their deck.
+	 * 
 	 * @param  {String} 	user_id
 	 */
 	this.shuffleHandToDeck = function(user_id) {
@@ -62,7 +69,7 @@ module.exports = function Game(player_one, player_two)
 	};
 
 	/**
-	 * [discardHand description]
+	 * Target player puts their hand into their graveyard.
 	 * @param  {String} 	user_id
 	 */
 	this.discardHand = function(user_id) {
@@ -71,7 +78,10 @@ module.exports = function Game(player_one, player_two)
 	}
 
 	/**
-	 * [castCard description]
+	 * Target player casts card from hand to battlefield, based on passed in
+	 * user ID and unique card ID.
+	 * Once this has been done, call update battlefield.
+	 * 
 	 * @param  {String} 	card_uuid
 	 * @param  {String} 	user_id
 	 */
@@ -81,7 +91,8 @@ module.exports = function Game(player_one, player_two)
 	};
 
 	/**
-	 * [endTurn description]
+	 * Target player ends their turns, and turn is passed to opponent.
+	 * 
 	 * @param  {String} 	user_id
 	 */
 	this.endTurn = function(user_id) {
@@ -92,7 +103,10 @@ module.exports = function Game(player_one, player_two)
 }
 
 /**
- * [setupPlayer description]
+ * Set up player at start of game.
+ * This includes building their deck, shuffling, drawing a hand
+ * and updating all information to the client.
+ * 
  * @param  {Player} 	player
  * @param  {Game} 		self
  */
@@ -116,7 +130,8 @@ function setupPlayer(player, self) {
 }
 
 /**
- * [startTurn description]
+ * Start a new turn, updating turn and priority, and pushing to player clients
+ * 
  * @param  {String} 	user_id
  * @param  {Game} 		self
  */
@@ -145,7 +160,8 @@ function startTurn(user_id, self) {
 }
 
 /**
- * [untapStep description]
+ * Untap all of target player's cards.
+ * 
  * @param  {String} 	user_id
  * @param  {Game} 		self
  */
@@ -154,7 +170,8 @@ function untapStep(user_id, self) {
 }
 
 /**
- * [endTurn description]
+ * End current turn, and call the start of the next turn.
+ * 
  * @param  {String} 	user_id
  * @param  {Game} 		self
  */
@@ -167,7 +184,9 @@ function endTurn(user_id, self) {
 }
 
 /**
- * [castPlayerCard description]
+ * Cast card from player's hand by user ID and card unique ID.
+ * This is only possible if player has priority.
+ * 
  * @param  {String} 	card_uuid
  * @param  {Player} 	player
  * @param  {Game} 		self
@@ -180,7 +199,8 @@ function castPlayerCard(card_uuid, player, self) {
 }
 
 /**
- * [battlefieldUpdate description]
+ * Update battlefield information for both players, and send to client.
+ * 
  * @param  {String} 	user_id
  * @param  {Game} 		self
  */
@@ -204,7 +224,8 @@ function battlefieldUpdate(user_id, self) {
 }
 
 /**
- * [updatePlayerClients description]
+ * Send player data to player clients.
+ * 
  * @param  {Object} 	player_one_data
  * @param  {Object} 	player_two_data
  * @param  {Game} 		self
@@ -215,7 +236,8 @@ function updatePlayerClients(player_one_data, player_two_data, self) {
 }
 
 /**
- * [emitToPlayers description]
+ * Emit identical data to both players' clients.
+ * 
  * @param  {String} 	key
  * @param  {Object} 	data
  * @param  {Game} 		self
@@ -226,23 +248,26 @@ function emitToPlayers(key, data, self) {
 }
 
 /**
- * [isPlayerOne description]
+ * Returns if the passed in user ID is player one.
+ * 
  * @param  {String} 	user_id
  * @param  {Game} 		self
+ * 
  * @return {Boolean}
  */
 function isPlayerOne(user_id, self) {return user_id == self.player_one.id;}
 
 /**
- * [isPlayerTwo description]
+ * Returns if the passed in user ID is player two.
  * @param  {String} 	user_id
  * @param  {Game} 		self
+ * 
  * @return {Boolean}
  */
 function isPlayerTwo(user_id, self) {return user_id == self.player_two.id;}
 
 /**
- * [getOtherPlayerByUserID description]
+ * Returns the opponent's player object of the passed in user ID
  * @param  {String} 	user_id
  * @param  {Game} 		self
  * @return {Player}
@@ -250,7 +275,8 @@ function isPlayerTwo(user_id, self) {return user_id == self.player_two.id;}
 function getOtherPlayerByUserID(user_id, self) {var result;if(self.player_one.id == user_id){result = self.player_two;}else if(self.player_two.id == user_id){result = self.player_one;}else{result = false;}return result;}
 
 /**
- * [getPlayerByUserID description]
+ * Returns the player object of the passed in user ID
+ * 
  * @param  {String} 	user_id
  * @param  {Game} 		self
  * @return {Player}

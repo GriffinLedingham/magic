@@ -9,6 +9,10 @@ module.exports = function Card(name)
 
 	this.initialized = false;
 
+	/**
+	 * [description]
+	 * Card properties all being empty initialized
+	 */
 	this.name = "";
     this.manaCost = "";
 	this.cmc = 0;

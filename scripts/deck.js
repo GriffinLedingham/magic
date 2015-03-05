@@ -9,7 +9,8 @@ module.exports = function Deck(deckString)
 	this.size = 0;
 
 	/**
-	 * [init description]
+	 * Set up deck by passed in deck string
+	 * 
 	 * @param  {String} 	deckString
 	 */
 	this.init = function(deckString) {
@@ -18,7 +19,10 @@ module.exports = function Deck(deckString)
 	};
 
 	/**
-	 * [importDeck description]
+	 * Return the parsed deck as an arrary of intergers.
+	 * Each index is a card name, indexing the number of that
+	 * card in the deck.
+	 * 
 	 * @param  {String} 	deckString
 	 * @return {Array}
 	 */
@@ -47,7 +51,7 @@ module.exports = function Deck(deckString)
 	};
 
 	/**
-	 * [buildDeck description]
+	 * Set up all of the various deck arrays needed for this class. See below notes for specifics.
 	 * 
 	 * card_index is generated, and then hashed against the full card object in card_hash
 	 * card_uuid is generated for each unique card in the deck, and then hashed against card_index in uuid_card_hash
@@ -76,7 +80,8 @@ module.exports = function Deck(deckString)
 	};
 
 	/**
-	 * [getCount description]
+	 * Return number of cards remaining in deck.
+	 * 
 	 * @return {Int}
 	 */
 	this.getCount = function() {
@@ -84,7 +89,8 @@ module.exports = function Deck(deckString)
 	}
 
 	/**
-	 * [getCards description]
+	 * Return array of full cards left in deck.
+	 * 
 	 * @return {Array}
 	 */
 	this.getCards = function() {
@@ -97,7 +103,8 @@ module.exports = function Deck(deckString)
 	};
 
 	/**
-	 * [getSimpleDeck description]
+	 * Return array of simple cards left in deck.
+	 * 
 	 * @return {Array}
 	 */
 	this.getSimpleDeck = function() {
@@ -112,7 +119,8 @@ module.exports = function Deck(deckString)
 	};
 
 	/**
-	 * [getCardByUUID description]
+	 * Return detailed card information from hash table, by card unique ID.
+	 * 
 	 * @param  {String} 	hash_id
 	 * @return {Card}
 	 */
@@ -121,7 +129,7 @@ module.exports = function Deck(deckString)
 	};
 
 	/**
-	 * [getSimpleCardByUUID description]
+	 * Return simple card information from hash table, by card unique ID.
 	 * @param  {String} 	hash_id
 	 * @return {Object}
 	 */
@@ -137,14 +145,16 @@ module.exports = function Deck(deckString)
 	};
 
 	/**
-	 * [shuffleDeck description]
+	 * Shuffle this deck's cards using Google shuffle algorithm.
+	 * I could write my own here..?
 	 */
 	this.shuffleDeck = function() {
 		this.cards = shuffle(this.cards);
 	};
 
 	/**
-	 * [drawCard description]
+	 * Draw the top card of this deck and return it.
+	 * 
 	 * @return {String}
 	 */
 	this.drawCard = function() {
@@ -153,7 +163,8 @@ module.exports = function Deck(deckString)
 	};
 
 	/**
-	 * [shuffleCardsIn description]
+	 * Shuffle an array of cards into this deck.
+	 * 
 	 * @param  {Array} 	cards_array
 	 */
 	this.shuffleCardsIn = function(cards_array) {
@@ -165,7 +176,8 @@ module.exports = function Deck(deckString)
 }
 
 /**
- * [generateUUID description]
+ * Generate and return the unique ID used for each card.
+ * 
  * @return {String}
  */
 function generateUUID(){
@@ -180,6 +192,7 @@ function generateUUID(){
 
 /**
  * Shuffle by Google
+ * 
  * @param  {Array} 	o
  * @return {Array}
  */
