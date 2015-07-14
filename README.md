@@ -1,4 +1,4 @@
-Tabletop Card Game Engine Project
+Tabletop Card Game Engine Project, using node.js.
 
 Running: 
 ```
