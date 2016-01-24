@@ -1,19 +1,30 @@
 var fs = require('fs');
+var game_config = require('./config/game');
 
 module.exports = function Game(player_one, player_two)
 {
+	this.goldfish = false;
 	this.player_one = player_one;
-	this.player_two = player_two;
+	this.player_two = false;
+
+	if(player_two != false)
+	{
+		this.player_two = player_two;
+	}
+	else
+	{
+		this.goldfish = true;
+	}
 
 	this.current_turn;
 	this.current_priority;
 
-	this.current_phase;
+	this.current_turn_data = {};
 
 	/**
 	 * Start the game by setting the current turn and priority,
 	 * then calling setup player for both of those participating.
-	 * 
+	 *
 	 * Set starting turn and priority, the set up both players for game
 	 */
 	this.init = function() {
@@ -21,25 +32,29 @@ module.exports = function Game(player_one, player_two)
 		this.current_priority = this.player_one.id;
 
 		setupPlayer(this.player_one, this);
-		setupPlayer(this.player_two, this);
+
+		if(!this.goldfish)
+		{
+			setupPlayer(this.player_two, this);
+		}
 	};
 
 	/**
 	 * Tap a card by passed in unique card ID and user ID.
 	 * Both parameters must be supplied.
-	 * 
+	 *
 	 * @param  {String} 	card_uuid
 	 * @param  {String} 		user_id
 	 */
 	this.tapCard = function(card_uuid, user_id) {
-		getPlayerByUserID(user_id, this).tapCard(card_uuid);
+		getPlayerByUserID(user_id, this).tapCard(card_uuid, this);
 		battlefieldUpdate(user_id, this);
 	};
 
 	/**
 	 * Untap a card by passed in unique card ID and user ID.
 	 * Both parameters must be supplied.
-	 * 
+	 *
 	 * @param  {String} 	card_uuid
 	 * @param  {String} 	user_id
 	 */
@@ -50,7 +65,7 @@ module.exports = function Game(player_one, player_two)
 
 	/**
 	 * Target player draws a card from their deck into their hand.
-	 * 
+	 *
 	 * @param  {String} 	user_id
 	 */
 	this.drawCard = function(user_id) {
@@ -60,7 +75,7 @@ module.exports = function Game(player_one, player_two)
 
 	/**
 	 * Target player shuffles their hand into their deck.
-	 * 
+	 *
 	 * @param  {String} 	user_id
 	 */
 	this.shuffleHandToDeck = function(user_id) {
@@ -81,7 +96,7 @@ module.exports = function Game(player_one, player_two)
 	 * Target player casts card from hand to battlefield, based on passed in
 	 * user ID and unique card ID.
 	 * Once this has been done, call update battlefield.
-	 * 
+	 *
 	 * @param  {String} 	card_uuid
 	 * @param  {String} 	user_id
 	 */
@@ -92,11 +107,29 @@ module.exports = function Game(player_one, player_two)
 
 	/**
 	 * Target player ends their turns, and turn is passed to opponent.
-	 * 
+	 *
 	 * @param  {String} 	user_id
 	 */
 	this.endTurn = function(user_id) {
 		endTurn(user_id, this);
+	};
+
+	/**
+	 * Target player ends their phase
+	 *
+	 * @param  {String} 	user_id
+	 */
+	this.endPhase = function(user_id) {
+		endPhase(user_id, this);
+	};
+
+	this.convertMana = function(color, user_id) {
+		getPlayerByUserID(user_id, this).convertManaToColorless(color);
+		battlefieldUpdate(user_id, this);
+	};
+
+	this.didPlayLand = function() {
+		this.current_turn_data['played_land'] = true;
 	};
 
 	this.init();
@@ -106,7 +139,7 @@ module.exports = function Game(player_one, player_two)
  * Set up player at start of game.
  * This includes building their deck, shuffling, drawing a hand
  * and updating all information to the client.
- * 
+ *
  * @param  {Player} 	player
  * @param  {Game} 		self
  */
@@ -114,24 +147,24 @@ function setupPlayer(player, self) {
 	var decks = fs.readdirSync('./data/decks');
 	var deck_to_use = decks[Math.floor(Math.random()*decks.length)];
 	var deck = fs.readFileSync('./data/decks/' + deck_to_use, 'utf8');
-	
+
 	player.buildDeck(deck);
 	player.shuffleDeck();
 	player.drawCards(7);
 
 	player.updateClientData({
-		'library':true, 
+		'library':true,
 		'hand':true,
 		'battlefield':true,
-		'mana':true, 
-		'turn': self.current_turn, 
+		'mana':true,
+		'turn': self.current_turn,
 		'priority': self.current_priority
 	});
 }
 
 /**
  * Start a new turn, updating turn and priority, and pushing to player clients
- * 
+ *
  * @param  {String} 	user_id
  * @param  {Game} 		self
  */
@@ -139,54 +172,217 @@ function startTurn(user_id, self) {
 	self.current_turn = user_id;
 	self.current_priority = user_id;
 
+	self.current_turn_data = {};
+
 	untapStep(user_id, self);
+	//drawStep(user_id, self);
+	//upkeepStep(user_id, self);
+
+	getPlayerByUserID(user_id, self).cureAllSummoningSick();
 
 	if(isPlayerOne(user_id, self))
 	{
 		var player_one_update = {'turn': self.current_turn, 'priority': self.current_priority, 'battlefield': true};
-		var player_two_update = {'turn': self.current_turn, 'priority': self.current_priority, 'opponent_battlefield': self.player_one.getSimpleBattlefield()};
+		var player_two_update = false;
+		if(!self.goldfish)
+		{
+			player_two_update = {'turn': self.current_turn, 'priority': self.current_priority, 'opponent_battlefield': self.player_one.getSimpleBattlefield()};
+		}
 	}
 	else if(isPlayerTwo(user_id, self))
 	{
 		var player_one_update = {'turn': self.current_turn, 'priority': self.current_priority, 'opponent_battlefield': self.player_two.getSimpleBattlefield()};
-		var player_two_update = {'turn': self.current_turn, 'priority': self.current_priority, 'battlefield': true};
+		var player_two_update = false;
+		if(!self.goldfish)
+		{
+			player_two_update = {'turn': self.current_turn, 'priority': self.current_priority, 'battlefield': true};
+		}
 	}
 
 	updatePlayerClients(
-		player_one_update, 
-		player_two_update, 
+		player_one_update,
+		player_two_update,
 		self
 	);
 }
 
 /**
  * Untap all of target player's cards.
- * 
+ *
  * @param  {String} 	user_id
  * @param  {Game} 		self
  */
 function untapStep(user_id, self) {
 	getPlayerByUserID(user_id, self).untapAllCards();
+	setTurnPhase('untap', user_id, self);
+	battlefieldUpdate(user_id, self);
+}
+
+/**
+ * Draw player card for turn
+ *
+ * @param  {String} 	user_id
+ * @param  {Game} 		self
+ */
+function drawStep(user_id, self) {
+	drawPlayerCards(user_id, 1, self);
+	setTurnPhase('draw', user_id, self);
+	battlefieldUpdate(user_id, self);
+}
+
+/**
+ * Player upkeep step
+ *
+ * @param  {String} 	user_id
+ * @param  {Game} 		self
+ */
+function upkeepStep(user_id, self) {
+	setTurnPhase('upkeep', user_id, self);
+	battlefieldUpdate(user_id, self);
+}
+
+/**
+ * Player main phase 1
+ *
+ * @param  {String} 	user_id
+ * @param  {Game} 		self
+ */
+function main1Step(user_id, self) {
+	setTurnPhase('main1', user_id, self);
+	battlefieldUpdate(user_id, self);
+}
+
+/**
+ * Player combat phase
+ *
+ * @param  {String} 	user_id
+ * @param  {Game} 		self
+ */
+function combatStep(user_id, self) {
+	setTurnPhase('combat', user_id, self);
+	battlefieldUpdate(user_id, self);
+}
+
+/**
+ * Player main phase 2
+ *
+ * @param  {String} 	user_id
+ * @param  {Game} 		self
+ */
+function main2Step(user_id, self) {
+	setTurnPhase('main2', user_id, self);
+	battlefieldUpdate(user_id, self);
+}
+
+/**
+ * Player main phase 2
+ *
+ * @param  {String} 	user_id
+ * @param  {Game} 		self
+ */
+function endStep(user_id, self) {
+	setTurnPhase('end', user_id, self);
+	battlefieldUpdate(user_id, self);
+}
+
+/**
+ * Set the current phase of the turn
+ *
+ * @param  {String} 	phase
+ * @param  {Game} 		self
+ */
+function setTurnPhase(phase, user_id, self) {
+	self.current_turn_data['phase'] = phase;
+	getPlayerByUserID(user_id, self).emptyManaPool();
+	battlefieldUpdate(user_id, self);
 }
 
 /**
  * End current turn, and call the start of the next turn.
- * 
+ *
  * @param  {String} 	user_id
  * @param  {Game} 		self
  */
 function endTurn(user_id, self) {
 	if(self.current_turn == user_id && self.current_priority == user_id)
 	{
-		var next_turn_user_id = getOtherPlayerByUserID(user_id, self).id;
+		var next_turn_user_id = user_id;
+		if(!self.goldfish)
+		{
+			next_turn_user_id = getOtherPlayerByUserID(user_id, self).id;
+		}
 		startTurn(next_turn_user_id, self);
 	}
 }
 
 /**
+ * Start next phase
+ *
+ * @param  {String} 	user_id
+ * @param  {Game} 		self
+ */
+function startNextPhase(user_id, self) {
+	var phases = game_config.phases;
+	if(self.current_turn_data['phase'] == 'end')
+	{
+		endTurn(user_id, self);
+	}
+	else
+	{
+		var phase_index = phases.indexOf(self.current_turn_data['phase']) + 1;
+		switch(phases[phase_index]) {
+			case 'untap':
+				untapStep(user_id,self);
+				break;
+			case 'upkeep':
+				upkeepStep(user_id,self);
+				break;
+			case 'draw':
+				drawStep(user_id, self);
+				break;
+			case 'main1':
+				main1Step(user_id, self);
+				break;
+			case 'combat':
+				combatStep(user_id, self);
+				break;
+			case 'main2':
+				main2Step(user_id, self);
+				break;
+			case 'end':
+				endStep(user_id, self);
+				break;
+		};
+	}
+}
+
+/**
+ * End current phase, and call the start of the next phase.
+ *
+ * @param  {String} 	user_id
+ * @param  {Game} 		self
+ */
+function endPhase(user_id, self) {
+	if(self.current_turn == user_id && self.current_priority == user_id)
+	{
+		startNextPhase(user_id, self);
+	}
+}
+
+/**
+ * Draw number amount of cards, by user ID
+ *
+ * @param  {String} user_id
+ * @param  {Integer} number
+ */
+function drawPlayerCards(user_id, number, self) {
+	getPlayerByUserID(user_id, self).drawCards(number);
+}
+
+/**
  * Cast card from player's hand by user ID and card unique ID.
  * This is only possible if player has priority.
- * 
+ *
  * @param  {String} 	card_uuid
  * @param  {Player} 	player
  * @param  {Game} 		self
@@ -194,65 +390,79 @@ function endTurn(user_id, self) {
 function castPlayerCard(card_uuid, player, self) {
 	if(self.current_priority == player.id)
 	{
-		player.playCard(card_uuid);
+		player.playCard(card_uuid, self);
 	}
 }
 
 /**
  * Update battlefield information for both players, and send to client.
- * 
+ *
  * @param  {String} 	user_id
  * @param  {Game} 		self
  */
 function battlefieldUpdate(user_id, self) {
 	if(isPlayerOne(user_id, self))
 	{
-		var player_one_update = {'battlefield': true, 'mana': true, 'hand': true};
-		var player_two_update = {'opponent_battlefield': self.player_one.getSimpleBattlefield()};
+		var player_one_update = {'battlefield': true, 'mana': true, 'hand': true, 'library':true, 'graveyard':true, 'phase': self.current_turn_data.phase};
+		var player_two_update = false;
+		if(!self.goldfish)
+		{
+			var player_two_update = {'opponent_battlefield': self.player_one.getSimpleBattlefield()};
+		}
 	}
 	else if(isPlayerTwo(user_id, self))
 	{
 		var player_one_update = {'opponent_battlefield': self.player_two.getSimpleBattlefield()};
-		var player_two_update = {'battlefield': true, 'mana': true, 'hand': true};
+		var player_two_update = false;
+		if(!self.goldfish)
+		{
+			player_two_update = {'battlefield': true, 'mana': true, 'hand': true, 'library':true, 'graveyard':true, 'phase': self.current_turn_data.phase};
+		}
 	}
 
 	updatePlayerClients(
-		player_one_update, 
-		player_two_update, 
+		player_one_update,
+		player_two_update,
 		self
 	);
 }
 
 /**
  * Send player data to player clients.
- * 
+ *
  * @param  {Object} 	player_one_data
  * @param  {Object} 	player_two_data
  * @param  {Game} 		self
  */
 function updatePlayerClients(player_one_data, player_two_data, self) {
 	self.player_one.updateClientData(player_one_data);
-	self.player_two.updateClientData(player_two_data);
+	if(player_two_data != false)
+	{
+		self.player_two.updateClientData(player_two_data);
+	}
 }
 
 /**
  * Emit identical data to both players' clients.
- * 
+ *
  * @param  {String} 	key
  * @param  {Object} 	data
  * @param  {Game} 		self
  */
 function emitToPlayers(key, data, self) {
 	self.player_one.socket.emit(key, data);
-	self.player_two.socket.emit(key, data);
+	if(!self.goldfish)
+	{
+		self.player_two.socket.emit(key, data);
+	}
 }
 
 /**
  * Returns if the passed in user ID is player one.
- * 
+ *
  * @param  {String} 	user_id
  * @param  {Game} 		self
- * 
+ *
  * @return {Boolean}
  */
 function isPlayerOne(user_id, self) {return user_id == self.player_one.id;}
@@ -261,7 +471,7 @@ function isPlayerOne(user_id, self) {return user_id == self.player_one.id;}
  * Returns if the passed in user ID is player two.
  * @param  {String} 	user_id
  * @param  {Game} 		self
- * 
+ *
  * @return {Boolean}
  */
 function isPlayerTwo(user_id, self) {return user_id == self.player_two.id;}
@@ -276,7 +486,7 @@ function getOtherPlayerByUserID(user_id, self) {var result;if(self.player_one.id
 
 /**
  * Returns the player object of the passed in user ID
- * 
+ *
  * @param  {String} 	user_id
  * @param  {Game} 		self
  * @return {Player}

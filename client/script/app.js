@@ -14,10 +14,10 @@ function init() {
     socket = io.connect('http://localhost:3000');
 
     setUpBindings();
+    initTemplates();
 
     socket.on('set_user_id', function(uid) {
         user_id = uid;
-        console.log(user_id);
     });
 
     socket.on('update_data', function(update_data){
@@ -62,6 +62,11 @@ function init() {
         {
             updatePriority(decoded_data.priority);
         }
+
+        if(typeof decoded_data.phase != 'undefined')
+        {
+            console.log(decoded_data.phase);
+        }
     });
 
     socket.emit('get_deck');
@@ -75,7 +80,7 @@ function updatePriority(priority) {
     }
     else
     {
-        $('#hand_cards').css('opacity', 1);   
+        $('#hand_cards').css('opacity', 1);
     }
 }
 
@@ -87,7 +92,7 @@ function updateTurn(turn_uid) {
     }
     else
     {
-        $('#end_turn_button').css('display','none');   
+        $('#end_turn_button').css('display','none');
     }
 }
 
@@ -96,12 +101,14 @@ function updateMana(mana_pool) {
 	$('#player_blue_mana').text(mana_pool.blue);
 	$('#player_black_mana').text(mana_pool.black);
 	$('#player_red_mana').text(mana_pool.red);
-	$('#player_green_mana').text(mana_pool.green);
+    $('#player_green_mana').text(mana_pool.green);
+	$('#player_colorless_mana').text(mana_pool.colorless);
 }
 
 function updateBattlefield(battlefield) {
 	player_battlefield = battlefield;
-	$('#battlefield_cards').html('');
+    $('#nonland_perm').html('');
+	$('#land_perm').html('');
 	for(card in battlefield)
     {
         var simple_card = battlefield[card];
@@ -110,7 +117,15 @@ function updateBattlefield(battlefield) {
         {
             tapped_class = 'tapped';
         }
-    	$('#battlefield_cards').append('<div class="player-battlefield-card '+tapped_class+'" data-uuid="'+simple_card.uuid+'" style="display:inline-block;transition: 0.3s;"><img style="height: 100px;" src="http://mtgimage.com/card/' + encodeURIComponent(simple_card.imageName) + '.jpg" /></div>');
+
+        if(simple_card.type.indexOf('Land') != -1)
+        {
+    	   $('#land_perm').append(loadTemplate('battlefieldCardTemplate', {tapped_class: tapped_class, simple_card: simple_card}));
+        }
+        else
+        {
+            $('#nonland_perm').append(loadTemplate('battlefieldCardTemplate', {tapped_class: tapped_class, simple_card: simple_card}));
+        }
     }
 }
 
@@ -125,44 +140,55 @@ function updateOpponentBattlefield(battlefield) {
         {
             tapped_class = 'tapped';
         }
-        $('#opponent_battlefield_cards').append('<div class="opponent-battlefield-card '+tapped_class+'" data-uuid="'+simple_card.uuid+'" style="display:inline-block;transition: 0.3s;"><img style="height: 100px;" src="http://mtgimage.com/card/' + encodeURIComponent(simple_card.imageName) + '.jpg" /></div>');
+        $('#opponent_battlefield_cards').append(loadTemplate('battlefieldCardTemplate', {tapped_class: tapped_class, simple_card: simple_card}));
     }
 }
 
 function updateHand(hand) {
 	player_hand = hand;
 	$('#hand_cards').html('');
-	for(card in hand)
+    var count = 0;
+    var num_cards = hand.length;
+    //var start = 0 - Math.floor(num_cards/2) - 2;
+    var start = 0 - Math.floor(num_cards/2);
+    var last = 20;
+    for(card in hand)
     {
-    	$('#hand_cards').append('<div class="player-hand-card" data-uuid="'+hand[card].uuid+'" style="display:inline-block;"><img style="height: 100px;" src="http://mtgimage.com/card/' + encodeURIComponent(hand[card].imageName) + '.jpg" /></div>');
+        //var bottom_val = (Math.min((last-((count-1)*(num_cards/2-5) )),20));
+        var bottom_val = (107 * (count - 1)) - (num_cards / 2) * 107;
+        if(count == 0) bottom_val = bottom_val - 15;
+    	$('#hand_cards').append(loadTemplate('handCardTemplate', {hand_card: hand[card], rotation: (((90 / num_cards) * (count - 1)) - 45)/*(start*10) + (count*10)*/, left: bottom_val}));
+        last = Math.min((last-((count-1)*(num_cards/2-5) )),20);
+        count++;
     }
 }
 
 function updateGraveyard(graveyard) {
+    if(graveyard.length == 0) return;
 	player_graveyard = graveyard;
 	$('#graveyard_cards').html('');
 	for(card in graveyard)
     {
-    	$('#graveyard_cards').append('<div data-uuid="'+graveyard[card].uuid+'" style="display:inline-block;"><img style="height: 100px;" src="http://mtgimage.com/card/' + encodeURIComponent(graveyard[card].imageName) + '.jpg" /></div>');
+    	$('#graveyard_cards').append(loadTemplate('battlefieldCardTemplate', {simple_card: graveyard[card]}));
     }
-    $('#graveyard_top_card').html('<div data-uuid="'+graveyard[graveyard.length-1].uuid+'" style="display:inline-block;"><img style="height: 100px;" src="http://mtgimage.com/card/' + encodeURIComponent(graveyard[graveyard.length-1].imageName) + '.jpg" /></div>')
-    $('#graveyard_count').text(graveyard.length);
+    $('#graveyard_top_card').html(loadTemplate('topGraveyardCardTemplate', {graveyard_card: graveyard[graveyard.length-1]}))
+    //$('#graveyard_count').text(graveyard.length);
 }
 
 function updateLibrary(count) {
-	$('#deck_count').text(count);
+	//$('#deck_count').text(count);
 }
 
 function setUpBindings() {
-	$('#battlefield_cards').on('click', '.player-battlefield-card', function(e) {
+	$('#player_battlefield').on('click', '.player-battlefield-card', function(e) {
 		if($(e.currentTarget).hasClass('tapped'))
 		{
-			$(e.currentTarget).removeClass('tapped');
-            socket.emit('untap_card', $(e.currentTarget).data('uuid'));
+			// $(e.currentTarget).removeClass('tapped');
+            // socket.emit('untap_card', $(e.currentTarget).data('uuid'));
 		}
 		else
 		{
-			$(e.currentTarget).addClass('tapped');
+			//$(e.currentTarget).addClass('tapped');
             socket.emit('tap_card', $(e.currentTarget).data('uuid'));
 		}
 	});
@@ -209,4 +235,38 @@ function setUpBindings() {
     	$('#player_graveyard').css('display','none');
     	$('#player_hand').css('display','block');
     });
+
+    $('.mana-icon').click(function(e){
+        var color = $(e.currentTarget).data('color');
+        if(color != 'colorless')
+        {
+            socket.emit('convert_color_to_colorless', color);
+        }
+    });
+
+    $(window)[0].addEventListener('mousedown', function(e){ e.preventDefault(); }, false);
+
+    $(window).keypress(function (e) {
+      if (e.keyCode === 0 || e.keyCode === 32) {
+        e.preventDefault()
+        socket.emit('end_phase');
+      }
+    })
 }
+
+var initTemplates = function(){
+  $.ajax({
+    url: './templates/magic.html',
+    type: 'GET',
+    async: false,
+    complete: function(response) {
+      $('#templates').append(response.responseText);
+    }
+  });
+};
+
+var loadTemplate = function(key, vars){
+    if(typeof vars == 'undefined') { vars = {}; }
+    var temp = Handlebars.compile($('#'+key).html());
+    return temp(vars);
+};

@@ -1,6 +1,9 @@
 var Components = require('../components.js');
 
-module.exports = 
+module.exports =
 {
-	cast: Components.castToStack
+	cast: Components.castToStack,
+  canCastCard: function(current_turn_data) {
+    return true;
+  }
 }

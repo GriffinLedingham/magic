@@ -8,13 +8,15 @@ app.configure(function(){
   app.use(express.bodyParser());
 });
 var server = http.createServer(app);
-var io = require('socket.io').listen(server); 
-server.listen(3000);  
+var io = require('socket.io').listen(server);
+server.listen(3000);
 io.set('log level', 0);
 
 var Card = require('./scripts/card');
 var Player = require('./scripts/player');
 var Game = require('./scripts/game');
+
+var Goldfish = true;
 
 var lobby = [];
 
@@ -54,10 +56,18 @@ io.sockets.on('connection', function (socket) {
 	socket.on('end_turn', function() {
 		socket.current_game.endTurn(socket.id);
 	});
+
+	socket.on('end_phase', function() {
+		socket.current_game.endPhase(socket.id);
+	});
+
+	socket.on('convert_color_to_colorless', function(color){
+		socket.current_game.convertMana(color, socket.id);
+	});
 });
 
 function startGame() {
-	if(lobby.length == 2)
+	if(!Goldfish && lobby.length == 2)
 	{
 		var socket_one = lobby.pop();
 		var socket_two = lobby.pop();
@@ -66,5 +76,13 @@ function startGame() {
 
 		socket_one.current_game = new_game;
 		socket_two.current_game = new_game;
+	}
+	else if(Goldfish)
+	{
+		var socket_one = lobby.pop();
+
+		var new_game = new Game(socket_one.player, false);
+
+		socket_one.current_game = new_game;
 	}
 }

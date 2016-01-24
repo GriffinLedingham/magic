@@ -79,9 +79,9 @@ function initCardScript(name, self)
 {
 	var result = false;
 	var escapedName = name.toLowerCase().replace(/ /g, '_');
-	if(fs.existsSync('./scripts/card_scripts/' + escapedName + '.js'))
+	if(fs.existsSync('./scripts/card_scripts/' + escapedName[0].toUpperCase() + '/' + escapedName + '.js'))
 	{
-		var fns = require('./card_scripts/' + escapedName + '.js');
+		var fns = require('./card_scripts/' + escapedName[0].toUpperCase() + '/' + escapedName + '.js');
 		for(fn_name in fns)
 		{
 			self[fn_name] = fns[fn_name];
@@ -99,27 +99,29 @@ function initCardProperties(name, self)
 		if(CardDatabase[card].name.toLowerCase() == name.toLowerCase())
 		{
 			var card_object = CardDatabase[card];
-			for(prop in card_object)
-			{
-				if(typeof self[prop] != 'undefined')
-				{
-					self[prop] = card_object[prop];
-				}
-			}
+      var printing = 1;
+      var full_card = null;
+      while(true) {
+  			var card_set = card_object.printings[card_object.printings.length-printing];
 
-			var card_set = card_object.printings[card_object.printings.length-1];
-
-			for(set in SetDatabase)
-			{
-				if(SetDatabase[set].name == card_set)
-				{
-					self['set'] = SetDatabase[set].code;
-					break;
-				}
-			}
+        var set_json = JSON.parse(fs.readFileSync('./data/json/'+card_set+'.json', 'utf8'));
+        var full_cards = set_json.cards.filter(function( obj ) {
+          return obj.name.toLowerCase() == name.toLowerCase();
+        });
+        full_card = full_cards[0];
+        if(typeof full_card.multiverseid != 'undefined'){break;}
+        printing++;
+      }
+      for(prop in full_card)
+      {
+        if(typeof self[prop] != 'undefined')
+        {
+          self[prop] = full_card[prop];
+        }
+      }
 
 			result = true;
 		}
-	}	
+	}
 	return result;
 }

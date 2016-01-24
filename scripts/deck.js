@@ -1,7 +1,7 @@
 var Card = require('../scripts/card');
 
 module.exports = function Deck(deckString)
-{	
+{
 	this.full_cards = [];
 	this.cards = [];
 	this.card_hash = {};
@@ -10,7 +10,7 @@ module.exports = function Deck(deckString)
 
 	/**
 	 * Set up deck by passed in deck string
-	 * 
+	 *
 	 * @param  {String} 	deckString
 	 */
 	this.init = function(deckString) {
@@ -22,7 +22,7 @@ module.exports = function Deck(deckString)
 	 * Return the parsed deck as an arrary of intergers.
 	 * Each index is a card name, indexing the number of that
 	 * card in the deck.
-	 * 
+	 *
 	 * @param  {String} 	deckString
 	 * @return {Array}
 	 */
@@ -52,12 +52,12 @@ module.exports = function Deck(deckString)
 
 	/**
 	 * Set up all of the various deck arrays needed for this class. See below notes for specifics.
-	 * 
+	 *
 	 * card_index is generated, and then hashed against the full card object in card_hash
 	 * card_uuid is generated for each unique card in the deck, and then hashed against card_index in uuid_card_hash
 	 * full_cards is pushed to as a static array which can be used to reverse lookup
 	 * cards is the library active in the current game
-	 * 
+	 *
 	 * @param  Array 	deckArray
 	 */
 	this.buildDeck = function(deckArray) {
@@ -81,7 +81,7 @@ module.exports = function Deck(deckString)
 
 	/**
 	 * Return number of cards remaining in deck.
-	 * 
+	 *
 	 * @return {Int}
 	 */
 	this.getCount = function() {
@@ -90,7 +90,7 @@ module.exports = function Deck(deckString)
 
 	/**
 	 * Return array of full cards left in deck.
-	 * 
+	 *
 	 * @return {Array}
 	 */
 	this.getCards = function() {
@@ -104,7 +104,7 @@ module.exports = function Deck(deckString)
 
 	/**
 	 * Return array of simple cards left in deck.
-	 * 
+	 *
 	 * @return {Array}
 	 */
 	this.getSimpleDeck = function() {
@@ -120,7 +120,7 @@ module.exports = function Deck(deckString)
 
 	/**
 	 * Return detailed card information from hash table, by card unique ID.
-	 * 
+	 *
 	 * @param  {String} 	hash_id
 	 * @return {Card}
 	 */
@@ -140,6 +140,8 @@ module.exports = function Deck(deckString)
 		simple_card.name = full_card.name;
 		simple_card.imageName = full_card.imageName;
 		simple_card.uuid = hash_id;
+		simple_card.mid = full_card.multiverseid;
+		simple_card.type = full_card.type;
 
 		return simple_card;
 	};
@@ -154,7 +156,7 @@ module.exports = function Deck(deckString)
 
 	/**
 	 * Draw the top card of this deck and return it.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	this.drawCard = function() {
@@ -164,7 +166,7 @@ module.exports = function Deck(deckString)
 
 	/**
 	 * Shuffle an array of cards into this deck.
-	 * 
+	 *
 	 * @param  {Array} 	cards_array
 	 */
 	this.shuffleCardsIn = function(cards_array) {
@@ -177,7 +179,7 @@ module.exports = function Deck(deckString)
 
 /**
  * Generate and return the unique ID used for each card.
- * 
+ *
  * @return {String}
  */
 function generateUUID(){
@@ -192,7 +194,7 @@ function generateUUID(){
 
 /**
  * Shuffle by Google
- * 
+ *
  * @param  {Array} 	o
  * @return {Array}
  */

@@ -10,11 +10,11 @@ module.exports = function Player(socket)
 	this.graveyard = [];
 	this.battlefield = {};
 
-	this.mana_pool = {'white':3,'blue':0,'black':0,'red':3,'green':1,'colorless':0};
+	this.mana_pool = {'white':0,'blue':0,'black':0,'red':0,'green':0,'colorless':0};
 
 	/**
 	 * Initialize player object.
-	 * 
+	 *
 	 * @param  {Socket} 	socket
 	 */
 	this.init = function(socket) {
@@ -25,8 +25,8 @@ module.exports = function Player(socket)
 
 	/**
 	 * Set the player's deck equal to the deck string passed in
-	 * 
-	 * @param  {String} 	deskString 
+	 *
+	 * @param  {String} 	deskString
 	 */
 	this.buildDeck = function(deckString) {
 		this.deck = new Deck(deckString);
@@ -42,7 +42,7 @@ module.exports = function Player(socket)
 
 	/**
 	 * Draw multiple cards, defined by num passed in
-	 * 
+	 *
 	 * @param  {Int} 	num
 	 */
 	this.drawCards = function(num) {
@@ -70,21 +70,25 @@ module.exports = function Player(socket)
 
 	/**
 	 * Tap target card passed through by card unique id.
-	 * 
+	 *
 	 * @param  {String} 	card_uuid
 	 */
-	this.tapCard = function(card_uuid) {
+	this.tapCard = function(card_uuid, game) {
 		if(typeof this.battlefield[card_uuid] != 'undefined')
 		{
 			var card_to_tap = this.battlefield[card_uuid];
-			card_to_tap.tapped = true;
-			this.battlefield[card_uuid] = card_to_tap;
+			if(typeof card_to_tap['sick'] == 'undefined' || card_to_tap['sick'] == false)
+			{
+				this.deck.getCardByUUID(card_uuid).tap(game);
+				card_to_tap.tapped = true;
+				this.battlefield[card_uuid] = card_to_tap;
+			}
 		}
 	};
 
 	/**
 	 * Untap target card passed through by card unique id.
-	 * 
+	 *
 	 * @param  {String} 	card_uuid
 	 */
 	this.untapCard = function(card_uuid) {
@@ -109,28 +113,31 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * Play a card from the player's hand to the battlefield 
+	 * Play a card from the player's hand to the battlefield
 	 * and spend corresponding mana to do so.
-	 * 
+	 *
 	 * @param  {String} 	card_uuid
 	 */
-	this.playCard = function(card_uuid) {
+	this.playCard = function(card_uuid, game) {
 		if(this.hand.indexOf(card_uuid) != -1)
 		{
 			var card_to_cast = this.deck.getCardByUUID(card_uuid);
-			if(spendManaForCard(card_to_cast.manaCost, this.mana_pool, this))
+			if(card_to_cast.canCastCard(game))
 			{
-				this.battlefield[card_uuid] = {'tapped':false,'damage':0};
-				var index = this.hand.indexOf(card_uuid);
-				this.hand.splice(index, 1);
-				card_to_cast.cast();
+				if(spendManaForCard(card_to_cast.manaCost, this.mana_pool, this))
+				{
+					this.battlefield[card_uuid] = {'tapped':false,'damage':0, 'sick': card_to_cast.doesGetSick()};
+					var index = this.hand.indexOf(card_uuid);
+					this.hand.splice(index, 1);
+					card_to_cast.cast(game);
+				}
 			}
 		}
 	};
 
 	/**
 	 * Return the player's full deck as an array (full card objects).
-	 * 
+	 *
 	 * @return {Array} 	Player's current library
 	 */
 	this.getFullDeck = function() {
@@ -139,7 +146,7 @@ module.exports = function Player(socket)
 
 	/**
 	 * Get array of this player's battlefield in the form of simplified cards.
-	 * 
+	 *
 	 * @return {Array}
 	 */
 	this.getSimpleBattlefield = function() {
@@ -156,15 +163,15 @@ module.exports = function Player(socket)
 	/**
 	 * Send off packet of data updates through socket to client
 	 * Data packets are passed through in the options array.
-	 * 
-	 * Any new data to send to client in the update process must 
+	 *
+	 * Any new data to send to client in the update process must
 	 * be added to this conditional check block.
-	 * 
+	 *
 	 * @param  {Object} 	update_options
 	 */
 	this.updateClientData = function(update_options) {
 		var update_json = {};
-		
+
 		if(typeof update_options['hand'] != 'undefined')
 		{
 			var simple_hand = getSimpleCards(this.hand, this.deck);
@@ -210,19 +217,57 @@ module.exports = function Player(socket)
 			update_json.priority = update_options['priority'];
 		}
 
+		if(typeof update_options['phase'] != 'undefined')
+		{
+			update_json.phase = update_options['phase'];
+		}
+
 		this.socket.emit('update_data',JSON.stringify(update_json));
 	};
+
+	this.getManaPool = function() {
+		return this.mana_pool;
+	};
+
+	this.emptyManaPool = function() {
+		this.mana_pool = {'white':0,'blue':0,'black':0,'red':0,'green':0,'colorless':0};
+	};
+
+	this.addMana = function(color, num) {
+		this.mana_pool[color] = this.mana_pool[color] + num;
+	};
+
+	this.cureAllSummoningSick = function() {
+		for(card_uuid in this.battlefield)
+		{
+			var card_to_untap = this.battlefield[card_uuid];
+			card_to_untap.sick = false;
+			this.battlefield[card_uuid] = card_to_untap;
+		}
+	};
+
+	this.convertManaToColorless = function(color) {
+		if(this.mana_pool[color] > 0)
+		{
+			this.mana_pool[color] = this.mana_pool[color] - 1;
+			this.mana_pool['colorless'] = this.mana_pool['colorless'] + 1;
+		}
+	};
+
+	this.didPlayLand = function(game) {
+		game.didPlayLand();
+	}
 
 	this.init(socket);
 }
 
 /**
- * Returns the passed in array of unique card ID's as 
+ * Returns the passed in array of unique card ID's as
  * simplified versions of the cards.
- * 
+ *
  * @param  {Array} 	cards
  * @param  {Deck} 	deck
- * 
+ *
  * @return {Array}
  */
 function getSimpleCards(cards, deck)
@@ -236,12 +281,12 @@ function getSimpleCards(cards, deck)
 }
 
 /**
- * Returns this player's battlefield as an 
+ * Returns this player's battlefield as an
  * array of simplified card objects.
- * 
+ *
  * @param  {Array} 	cards
  * @param  {Deck} 	deck
- * 
+ *
  * @return {Array}
  */
 function getSimpleBattlefield(cards, deck)
@@ -251,7 +296,7 @@ function getSimpleBattlefield(cards, deck)
 	for(card_uuid in cards)
 	{
 		var simple_card = deck.getSimpleCardByUUID(card_uuid);
-		
+
 		var card_bf_object = cards[card_uuid];
 		simple_card.tapped = card_bf_object.tapped;
 
@@ -263,11 +308,11 @@ function getSimpleBattlefield(cards, deck)
 /**
  * Deplete mana from this player's mana pool used to
  * pay the cost of a card.
- * 
+ *
  * @param  {String} 	mana_cost
  * @param  {Object} 	mana_pool
  * @param  {Player} 	self
- * 
+ *
  * @return {Bool}
  */
 function spendManaForCard(mana_cost, mana_pool, self)
@@ -317,7 +362,7 @@ function spendManaForCard(mana_cost, mana_pool, self)
 
 /**
  * Returns whether a value is numeric.
- * 
+ *
  * @return {Boolean}
  */
 function isNumber(n) {

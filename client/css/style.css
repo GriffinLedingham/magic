@@ -4,5 +4,18 @@ body {
 }
 
 .tapped {
+  transition: transform 0.3s;
 	transform:rotate(90deg);
+  -webkit-transition: -webkit-transform 0.3s;
+  -webkit-transform: rotate(90deg)
 }
+
+.player-hand-card:hover .hand-card-img {
+  height:150px !important;
+  border-radius: 7px;
+  transition: opacity 1s;
+}
+
+.player-hand-card:hover {
+  z-index:2;
+};
