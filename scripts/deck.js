@@ -143,6 +143,11 @@ module.exports = function Deck(deckString)
 		simple_card.mid = full_card.multiverseid;
 		simple_card.type = full_card.type;
 
+		if(typeof full_card.getCardChoices != 'undefined')
+		{
+			simple_card.options = full_card.getCardChoices();
+		}
+
 		return simple_card;
 	};
 

@@ -9,8 +9,13 @@ module.exports = function Player(socket)
 	this.hand;
 	this.graveyard = [];
 	this.battlefield = {};
+	this.health = 20;
 
-	this.mana_pool = {'white':0,'blue':0,'black':0,'red':0,'green':0,'colorless':0};
+	this.statistics = {
+
+	};
+
+	this.mana_pool = {'white':0,'blue':0,'black':0,'red':0,'green':0,'colorless':0,'generic':0};
 
 	/**
 	 * Initialize player object.
@@ -87,6 +92,34 @@ module.exports = function Player(socket)
 	};
 
 	/**
+	 * Tap target card passed through by card unique id.
+	 *
+	 * @param  {String} 	card_uuid
+	 */
+	this.tapCardOption = function(card_uuid, option, game) {
+		if(typeof this.battlefield[card_uuid] != 'undefined')
+		{
+			var card_to_tap = this.battlefield[card_uuid];
+			if(typeof card_to_tap['sick'] == 'undefined' || card_to_tap['sick'] == false)
+			{
+				this.deck.getCardByUUID(card_uuid).tapOption(game, option);
+				card_to_tap.tapped = true;
+				this.battlefield[card_uuid] = card_to_tap;
+			}
+		}
+	};
+
+	this.forceTapCard = function(card_uuid, game) {
+		if(typeof this.battlefield[card_uuid] != 'undefined')
+		{
+			var card_to_tap = this.battlefield[card_uuid];
+			card_to_tap.tapped = true;
+			this.battlefield[card_uuid] = card_to_tap;
+			this.updateClientData({'battlefield': true, 'mana': true, 'hand': true, 'library':true, 'graveyard':true, 'phase': game.current_turn_data.phase, 'health': game.player_one.health});
+		}
+	};
+
+	/**
 	 * Untap target card passed through by card unique id.
 	 *
 	 * @param  {String} 	card_uuid
@@ -136,6 +169,30 @@ module.exports = function Player(socket)
 	};
 
 	/**
+	 * Play a card from the player's hand to the battlefield with option
+	 * and spend corresponding mana to do so.
+	 *
+	 * @param  {String} 	card_uuid
+	 * @param  {String} 	option
+	 */
+	this.playCardOption = function(card_uuid, option, game) {
+		if(this.hand.indexOf(card_uuid) != -1)
+		{
+			var card_to_cast = this.deck.getCardByUUID(card_uuid);
+			if(card_to_cast.canCastCard(game))
+			{
+				if(spendManaForCard(card_to_cast.manaCost, this.mana_pool, this))
+				{
+					this.battlefield[card_uuid] = {'tapped':false,'damage':0, 'sick': card_to_cast.doesGetSick()};
+					var index = this.hand.indexOf(card_uuid);
+					this.hand.splice(index, 1);
+					card_to_cast.castOption(game, card_uuid, option);
+				}
+			}
+		}
+	};
+
+	/**
 	 * Return the player's full deck as an array (full card objects).
 	 *
 	 * @return {Array} 	Player's current library
@@ -158,6 +215,14 @@ module.exports = function Player(socket)
 	 */
 	this.shuffleDeck = function() {
 		this.deck.shuffleDeck();
+	};
+
+	this.subtractHealth = function(num) {
+		this.health = this.health - num;
+	};
+
+	this.addHealth = function(num) {
+		this.health = this.health + num;
 	};
 
 	/**
@@ -222,6 +287,11 @@ module.exports = function Player(socket)
 			update_json.phase = update_options['phase'];
 		}
 
+		if(typeof update_options['health'] != 'undefined')
+		{
+			update_json.health = this.health;
+		}
+
 		this.socket.emit('update_data',JSON.stringify(update_json));
 	};
 
@@ -230,7 +300,7 @@ module.exports = function Player(socket)
 	};
 
 	this.emptyManaPool = function() {
-		this.mana_pool = {'white':0,'blue':0,'black':0,'red':0,'green':0,'colorless':0};
+		this.mana_pool = {'white':0,'blue':0,'black':0,'red':0,'green':0,'colorless':0,'generic':0};
 	};
 
 	this.addMana = function(color, num) {
@@ -246,11 +316,11 @@ module.exports = function Player(socket)
 		}
 	};
 
-	this.convertManaToColorless = function(color) {
+	this.convertManaToGeneric = function(color) {
 		if(this.mana_pool[color] > 0)
 		{
 			this.mana_pool[color] = this.mana_pool[color] - 1;
-			this.mana_pool['colorless'] = this.mana_pool['colorless'] + 1;
+			this.mana_pool['generic'] = this.mana_pool['generic'] + 1;
 		}
 	};
 
@@ -328,7 +398,7 @@ function spendManaForCard(mana_cost, mana_pool, self)
 
 	if(isNumber(mana_cost_array[0]))
 	{
-		mana_cost_object.colorless = parseInt(mana_cost_array[0]);
+		mana_cost_object.generic = parseInt(mana_cost_array[0]);
 		mana_cost_array.shift();
 	}
 

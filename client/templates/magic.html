@@ -1,5 +1,5 @@
 <script id="battlefieldCardTemplate" type="text/x-handlebars-template">
-  <div class="player-battlefield-card {{tapped_class}}" data-uuid="{{simple_card.uuid}}" style="display:inline-block;"><img style="" src="http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={{simple_card.mid}}&type=card" /></div>
+  <div class="player-battlefield-card {{tapped_class}}" data-uuid="{{simple_card.uuid}}" style="display:inline-block;"><img style="height:240px;" src="http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={{simple_card.mid}}&type=card" /></div>
 </script>
 
 <script id="handCardTemplate" type="text/x-handlebars-template">
@@ -8,5 +8,25 @@
 
 <script id="topGraveyardCardTemplate" type="text/x-handlebars-template">
   <div data-uuid="{{graveyard_card.uuid}}" style="display:inline-block;"><img style="height: 100px;" src="http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={{graveyard_card.mid}}&type=card" /></div>
+</script>
+
+<script id="decisionTapMenuTemplate" type="text/x-handlebars-template">
+  <div id="decisionTapMenu" data-uuid="{{uuid}}" style="position: absolute;z-index: 2;background: #EFEFEF;border: 1px solid black;padding: 5px;">
+    {{#options}}
+      {{#tap}}
+        <div data-option="{{option}}" class="card-tap-option">{{text}}</div>
+      {{/tap}}
+    {{/options}}
+  </div>
+</script>
+
+<script id="decisionCastMenuTemplate" type="text/x-handlebars-template">
+  <div id="decisionCastMenu" data-uuid="{{uuid}}" style="position: absolute;z-index: 2;background: #EFEFEF;border: 1px solid black;padding: 5px;">
+    {{#options}}
+      {{#cast}}
+        <div data-option="{{option}}" class="card-cast-option">{{text}}</div>
+      {{/cast}}
+    {{/options}}
+  </div>
 </script>
 

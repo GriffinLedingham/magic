@@ -67,6 +67,11 @@ function init() {
         {
             console.log(decoded_data.phase);
         }
+
+        if(typeof decoded_data.health != 'undefined')
+        {
+            updatePlayerHealth(decoded_data.health);
+        }
     });
 
     socket.emit('get_deck');
@@ -102,7 +107,12 @@ function updateMana(mana_pool) {
 	$('#player_black_mana').text(mana_pool.black);
 	$('#player_red_mana').text(mana_pool.red);
     $('#player_green_mana').text(mana_pool.green);
-	$('#player_colorless_mana').text(mana_pool.colorless);
+    $('#player_colorless_mana').text(mana_pool.colorless);
+	$('#player_generic_mana').text(mana_pool.generic);
+}
+
+function updatePlayerHealth(health) {
+    $('#player_health').text(health);
 }
 
 function updateBattlefield(battlefield) {
@@ -179,25 +189,80 @@ function updateLibrary(count) {
 	//$('#deck_count').text(count);
 }
 
+function optionTapMenu(card, e) {
+    var height = $('#decisionMenu').height();
+    var width = $('#decisionMenu').width();
+
+    leftVal=e.pageX-(width/2)+"px";
+    topVal=e.pageY-(height/2)+"px";
+
+    var template = loadTemplate('decisionTapMenuTemplate', card);
+    $('body').prepend(template);
+
+    $('#decisionTapMenu').css({left:leftVal,top:topVal}).show();
+}
+
+function optionCastMenu(card, e) {
+    var height = $('#decisionMenu').height();
+    var width = $('#decisionMenu').width();
+
+    leftVal=e.pageX-(width/2)+"px";
+    topVal=e.pageY-(height/2)+"px";
+
+    var template = loadTemplate('decisionCastMenuTemplate', card);
+    $('body').prepend(template);
+
+    $('#decisionCastMenu').css({left:leftVal,top:topVal}).show();
+}
+
 function setUpBindings() {
 	$('#player_battlefield').on('click', '.player-battlefield-card', function(e) {
 		if($(e.currentTarget).hasClass('tapped'))
 		{
-			// $(e.currentTarget).removeClass('tapped');
-            // socket.emit('untap_card', $(e.currentTarget).data('uuid'));
+
 		}
 		else
 		{
-			//$(e.currentTarget).addClass('tapped');
-            socket.emit('tap_card', $(e.currentTarget).data('uuid'));
-		}
-	});
+            var uuid = $(e.currentTarget).data('uuid');
+            for(card in player_battlefield)
+            {
+                if(player_battlefield[card].uuid == uuid)
+                {
+                    if(typeof player_battlefield[card]['options'] == 'undefined'
+                        && typeof player_battlefield[card]['options']['tap'] == 'undefined')
+                    {
+                        socket.emit('tap_card', {uuid: $(e.currentTarget).data('uuid')});
+                    }
+                    else
+                    {
+                        optionTapMenu(player_battlefield[card], e);
+                    }
+                    break;
+                }
+            }
+        }
+    });
 
 	$(document).on('click', '.player-hand-card', function(e) {
         if(priority_user_id == user_id)
         {
 		  var card_uuid = $(e.currentTarget).data('uuid');
-		  socket.emit('play_card', card_uuid);
+          console.log(player_hand);
+          for(card in player_hand)
+          {
+            if(player_hand[card].uuid == card_uuid)
+            {
+                if(typeof player_hand[card]['options'] == 'undefined'
+                    || typeof player_hand[card]['options']['cast'] == 'undefined')
+                {
+		          socket.emit('play_card', card_uuid);
+                }
+                else
+                {
+                  optionCastMenu(player_hand[card], e);
+                }
+            }
+          }
         }
 	});
 
@@ -252,6 +317,23 @@ function setUpBindings() {
         socket.emit('end_phase');
       }
     })
+
+    $('.player-battlefield-card').bind("contextmenu", function(event) {
+        event.preventDefault();
+        rightClickMenu(event);
+    });
+
+    $(document).on('click', '.card-tap-option', function(e){
+        var option = $(e.currentTarget).data('option');
+        socket.emit('tap_card_option', {uuid: $('#decisionTapMenu').data('uuid'), option: option});
+        $('#decisionTapMenu').remove();
+    });
+
+    $(document).on('click', '.card-cast-option', function(e){
+        var option = $(e.currentTarget).data('option');
+        socket.emit('play_card_option', {uuid: $('#decisionCastMenu').data('uuid'), option: option});
+        $('#decisionCastMenu').remove();
+    });
 }
 
 var initTemplates = function(){

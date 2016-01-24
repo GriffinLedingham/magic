@@ -13,25 +13,25 @@ module.exports = function Card(name)
 	 * [description]
 	 * Card properties all being empty initialized
 	 */
-	this.name = "";
-    this.manaCost = "";
-	this.cmc = 0;
-    this.colors = [];
-    this.type = "";
-    this.supertypes = [];
-	this.types = [];
-    this.subtypes = [];
-    this.rarity = "";
-    this.text = "";
-    this.flavor = "";
-    this.artist = "";
-    this.number = "";
-    this.power = "";
-    this.toughness = "";
-    this.layout = "";
-    this.multiverseid = 0;
-    this.set = "";
-    this.imageName = "";
+  this.name = "";
+  this.manaCost = "";
+  this.cmc = 0;
+  this.colors = [];
+  this.type = "";
+  this.supertypes = [];
+  this.types = [];
+  this.subtypes = [];
+  this.rarity = "";
+  this.text = "";
+  this.flavor = "";
+  this.artist = "";
+  this.number = "";
+  this.power = "";
+  this.toughness = "";
+  this.layout = "";
+  this.multiverseid = 0;
+  this.set = "";
+  this.imageName = "";
 
 	this.init = function(name){
 		this.name = name;

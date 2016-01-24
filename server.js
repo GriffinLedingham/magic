@@ -49,8 +49,16 @@ io.sockets.on('connection', function (socket) {
 		socket.current_game.castCard(card_uuid, socket.id);
 	});
 
+	socket.on('play_card_option', function(data){
+		socket.current_game.castCardOption(data.uuid, data.option, socket.id);
+	});
+
 	socket.on('tap_card', function(card_uuid){
 		socket.current_game.tapCard(card_uuid, socket.id);
+	});
+
+	socket.on('tap_card_option', function(data){
+		socket.current_game.tapCardOption(data.uuid, data.option, socket.id);
 	});
 
 	socket.on('end_turn', function() {
@@ -61,7 +69,7 @@ io.sockets.on('connection', function (socket) {
 		socket.current_game.endPhase(socket.id);
 	});
 
-	socket.on('convert_color_to_colorless', function(color){
+	socket.on('convert_color_to_generic', function(color){
 		socket.current_game.convertMana(color, socket.id);
 	});
 });

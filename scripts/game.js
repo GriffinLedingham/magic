@@ -52,6 +52,19 @@ module.exports = function Game(player_one, player_two)
 	};
 
 	/**
+	 * Tap a card by passed in unique card ID and user ID, with option.
+	 * Both parameters must be supplied.
+	 *
+	 * @param  {String} 	card_uuid
+	 * @param  {String} 		option
+	 * @param  {String} 		user_id
+	 */
+	this.tapCardOption = function(card_uuid, option, user_id) {
+		getPlayerByUserID(user_id, this).tapCardOption(card_uuid, option, this);
+		battlefieldUpdate(user_id, this);
+	};
+
+	/**
 	 * Untap a card by passed in unique card ID and user ID.
 	 * Both parameters must be supplied.
 	 *
@@ -106,6 +119,20 @@ module.exports = function Game(player_one, player_two)
 	};
 
 	/**
+	 * Target player casts card from hand to battlefield, based on passed in
+	 * user ID and unique card ID, with option.
+	 * Once this has been done, call update battlefield.
+	 *
+	 * @param  {String} 	card_uuid
+	 * @param  {String} 	option
+	 * @param  {String} 	user_id
+	 */
+	this.castCardOption = function(card_uuid, option, user_id) {
+		castPlayerCardOption(card_uuid, getPlayerByUserID(user_id, this), option, this);
+		battlefieldUpdate(user_id, this);
+	};
+
+	/**
 	 * Target player ends their turns, and turn is passed to opponent.
 	 *
 	 * @param  {String} 	user_id
@@ -124,7 +151,7 @@ module.exports = function Game(player_one, player_two)
 	};
 
 	this.convertMana = function(color, user_id) {
-		getPlayerByUserID(user_id, this).convertManaToColorless(color);
+		getPlayerByUserID(user_id, this).convertManaToGeneric(color);
 		battlefieldUpdate(user_id, this);
 	};
 
@@ -145,7 +172,7 @@ module.exports = function Game(player_one, player_two)
  */
 function setupPlayer(player, self) {
 	var decks = fs.readdirSync('./data/decks');
-	var deck_to_use = decks[Math.floor(Math.random()*decks.length)];
+	var deck_to_use = decks[2];//Math.floor(Math.random()*decks.length)];
 	var deck = fs.readFileSync('./data/decks/' + deck_to_use, 'utf8');
 
 	player.buildDeck(deck);
@@ -394,6 +421,13 @@ function castPlayerCard(card_uuid, player, self) {
 	}
 }
 
+function castPlayerCardOption(card_uuid, player, option, self) {
+	if(self.current_priority == player.id)
+	{
+		player.playCardOption(card_uuid, option, self);
+	}
+}
+
 /**
  * Update battlefield information for both players, and send to client.
  *
@@ -403,7 +437,7 @@ function castPlayerCard(card_uuid, player, self) {
 function battlefieldUpdate(user_id, self) {
 	if(isPlayerOne(user_id, self))
 	{
-		var player_one_update = {'battlefield': true, 'mana': true, 'hand': true, 'library':true, 'graveyard':true, 'phase': self.current_turn_data.phase};
+		var player_one_update = {'battlefield': true, 'mana': true, 'hand': true, 'library':true, 'graveyard':true, 'phase': self.current_turn_data.phase, 'health': self.player_one.health};
 		var player_two_update = false;
 		if(!self.goldfish)
 		{
