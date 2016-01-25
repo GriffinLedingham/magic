@@ -74,11 +74,45 @@ module.exports = function Player(socket)
 	};
 
 	/**
+	 * Place player's hand into the graveyard.
+	 */
+	this.discardCastCard = function(card_uuid, game) {
+		if(typeof this.battlefield[card_uuid] != 'undefined')
+		{
+			var card_to_discard = this.battlefield[card_uuid];
+			this.graveyard.push(card_uuid);
+			delete this.battlefield[card_uuid];
+			this.updateClientData({'battlefield': true, 'mana': true, 'hand': true, 'library':true, 'graveyard':true, 'phase': game.current_turn_data.phase, 'health': game.player_one.health});
+		}
+	};
+
+	this.discardRandomCard = function(game) {
+		var index = Math.floor(Math.random()*this.hand.length);
+		var card_to_discard = this.hand[index];
+		this.graveyard.push(card_to_discard);
+		this.hand.splice(index,1);
+		this.updateClientData({'battlefield': true, 'mana': true, 'hand': true, 'library':true, 'graveyard':true, 'phase': game.current_turn_data.phase, 'health': game.player_one.health});
+	};
+
+	this.millTopCard = function() {
+		var card_uuid = this.deck.drawCard();
+		this.graveyard.push(card_uuid);
+	};
+
+	this.millTopCards = function(num) {
+		for(var i = 0;i<num;i++)
+		{
+			this.millTopCard();
+		}
+	};
+
+	/**
 	 * Tap target card passed through by card unique id.
 	 *
 	 * @param  {String} 	card_uuid
 	 */
-	this.tapCard = function(card_uuid, game) {
+	this.tapCard = function(data, game) {
+		var card_uuid = data.uuid;
 		if(typeof this.battlefield[card_uuid] != 'undefined')
 		{
 			var card_to_tap = this.battlefield[card_uuid];
@@ -162,7 +196,44 @@ module.exports = function Player(socket)
 					this.battlefield[card_uuid] = {'tapped':false,'damage':0, 'sick': card_to_cast.doesGetSick()};
 					var index = this.hand.indexOf(card_uuid);
 					this.hand.splice(index, 1);
-					card_to_cast.cast(game);
+					card_to_cast.cast(game, card_uuid);
+				}
+			}
+		}
+	};
+
+	/**
+	 * Play a card from the player's hand to the battlefield
+	 * with alt mana cost
+	 *
+	 * @param  {String} 	card_uuid
+	 */
+	this.playCardAltCost = function(card_uuid, option, game) {
+		if(this.hand.indexOf(card_uuid) != -1)
+		{
+			var card_to_cast = this.deck.getCardByUUID(card_uuid);
+			if(card_to_cast.canCastCard(game))
+			{
+				var uses_mana = card_to_cast.optionUsesMana(option);
+				if(uses_mana)
+				{
+					if(spendManaForCard(card_to_cast.manaCost, this.mana_pool, this))
+					{
+						this.battlefield[card_uuid] = {'tapped':false,'damage':0, 'sick': card_to_cast.doesGetSick()};
+						var index = this.hand.indexOf(card_uuid);
+						this.hand.splice(index, 1);
+						card_to_cast.cast(game, card_uuid);
+					}
+				}
+				else
+				{
+					if(card_to_cast.payAltCost(option, game))
+					{
+						this.battlefield[card_uuid] = {'tapped':false,'damage':0, 'sick': card_to_cast.doesGetSick()};
+						var index = this.hand.indexOf(card_uuid);
+						this.hand.splice(index, 1);
+						card_to_cast.cast(game, card_uuid);
+					}
 				}
 			}
 		}

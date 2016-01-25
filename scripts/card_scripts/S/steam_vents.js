@@ -26,8 +26,8 @@ module.exports =
   getCardChoices: function() {
     return {
       'cast':[
-        {option: 0, text: 'Tapped'},
-        {option: 1, text: 'Untapped'}
+        {option: 0, text: 'Enter the battlefield tapped.'},
+        {option: 1, text: 'Pay 2 life, enter the battlefield untapped.'}
       ],
       'tap':[
         {option: 0, text: 'Add R mana.'},

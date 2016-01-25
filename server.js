@@ -53,6 +53,10 @@ io.sockets.on('connection', function (socket) {
 		socket.current_game.castCardOption(data.uuid, data.option, socket.id);
 	});
 
+	socket.on('play_card_alt_cost', function(data){
+		socket.current_game.castCardAltCost(data.uuid, data.option, socket.id);
+	});
+
 	socket.on('tap_card', function(card_uuid){
 		socket.current_game.tapCard(card_uuid, socket.id);
 	});

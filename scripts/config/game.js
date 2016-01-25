@@ -8,5 +8,6 @@ module.exports =
     'combat',
     'main2',
     'end'
-  ]
+  ],
+  custom_only: true
 }

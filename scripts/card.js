@@ -87,7 +87,12 @@ function initCardScript(name, self)
 			self[fn_name] = fns[fn_name];
 		}
 		result = true;
+    self.has_script = true;
 	}
+  else
+  {
+    self.has_script = false;
+  }
 	return result;
 }
 

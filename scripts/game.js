@@ -132,6 +132,11 @@ module.exports = function Game(player_one, player_two)
 		battlefieldUpdate(user_id, this);
 	};
 
+	this.castCardAltCost = function(card_uuid, option, user_id) {
+		castPlayerCardAltCost(card_uuid, getPlayerByUserID(user_id, this), option, this);
+		battlefieldUpdate(user_id, this);
+	};
+
 	/**
 	 * Target player ends their turns, and turn is passed to opponent.
 	 *
@@ -425,6 +430,13 @@ function castPlayerCardOption(card_uuid, player, option, self) {
 	if(self.current_priority == player.id)
 	{
 		player.playCardOption(card_uuid, option, self);
+	}
+}
+
+function castPlayerCardAltCost(card_uuid, player, option, self) {
+	if(self.current_priority == player.id)
+	{
+		player.playCardAltCost(card_uuid, option, self);
 	}
 }
 

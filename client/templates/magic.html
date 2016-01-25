@@ -30,3 +30,13 @@
   </div>
 </script>
 
+<script id="decisionAltCostMenuTemplate" type="text/x-handlebars-template">
+  <div id="decisionAltCostMenu" data-uuid="{{uuid}}" style="position: absolute;z-index: 2;background: #EFEFEF;border: 1px solid black;padding: 5px;">
+    {{#options}}
+      {{#cost}}
+        <div data-option="{{option}}" class="card-cost-option">{{text}}</div>
+      {{/cost}}
+    {{/options}}
+  </div>
+</script>
+

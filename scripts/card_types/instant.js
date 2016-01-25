@@ -5,5 +5,8 @@ module.exports =
 	cast: Components.castToStack,
   canCastCard: function(current_turn_data) {
     return true;
+  },
+  doesGetSick: function() {
+    return false;
   }
 }

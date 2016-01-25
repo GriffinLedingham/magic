@@ -1,4 +1,5 @@
 var Card = require('../scripts/card');
+var game_config = require('./config/game');
 
 module.exports = function Deck(deckString)
 {
@@ -72,7 +73,10 @@ module.exports = function Deck(deckString)
 				var card_uuid = generateUUID();
 				this.uuid_card_hash[card_uuid] = card_index;
 				this.full_cards.push(card_uuid);
-				this.cards.push(card_uuid);
+				if(!game_config.custom_only || card_data.has_script)
+				{
+					this.cards.push(card_uuid);
+				}
 			}
 			card_index++;
 		}
