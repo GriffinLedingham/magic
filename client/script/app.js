@@ -11,7 +11,7 @@ var priority_user_id;
 var socket;
 
 function init() {
-    socket = io.connect('http://localhost:3000');
+    socket = io.connect('http://mtgfish.herokuapp.com/');
 
     setUpBindings();
     initTemplates();
