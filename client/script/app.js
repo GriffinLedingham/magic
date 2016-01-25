@@ -65,7 +65,7 @@ function init() {
 
         if(typeof decoded_data.phase != 'undefined')
         {
-            console.log(decoded_data.phase);
+            updatePhase(decoded_data.phase);
         }
 
         if(typeof decoded_data.health != 'undefined')
@@ -187,6 +187,10 @@ function updateGraveyard(graveyard) {
 
 function updateLibrary(count) {
 	//$('#deck_count').text(count);
+}
+
+function updatePhase(phase) {
+    $('#phase').text(phase.replace('1','').replace('2',''));
 }
 
 function optionTapMenu(card, e) {
