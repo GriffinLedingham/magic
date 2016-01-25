@@ -304,13 +304,29 @@ function setUpBindings() {
     });
 
     $('#show_graveyard_button').click(function(){
-    	$('#player_hand').css('display','none');
-    	$('#player_graveyard').css('display','block');
+        if($('#player_graveyard').css('display') == 'block')
+        {
+           $('#player_hand').css('display','block');
+           $('#player_graveyard').css('display','none');
+        }
+        else
+        {
+    	   $('#player_hand').css('display','none');
+    	   $('#player_graveyard').css('display','block');
+        }
     });
 
     $('#player_graveyard_single').click(function(){
-    	$('#player_hand').css('display','none');
-    	$('#player_graveyard').css('display','block');
+    	if($('#player_graveyard').css('display') == 'block')
+        {
+           $('#player_hand').css('display','block');
+           $('#player_graveyard').css('display','none');
+        }
+        else
+        {
+           $('#player_hand').css('display','none');
+           $('#player_graveyard').css('display','block');
+        }
     });
 
     $('#show_hand_button').click(function(){

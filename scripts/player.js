@@ -74,7 +74,10 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * Place player's hand into the graveyard.
+	 * Discard non-permanent being cast to field.
+	 *
+	 * @param  {String} 	card_uuid
+	 * @param  {Object} 	game
 	 */
 	this.discardCastCard = function(card_uuid, game) {
 		if(typeof this.battlefield[card_uuid] != 'undefined')
@@ -86,6 +89,11 @@ module.exports = function Player(socket)
 		}
 	};
 
+	/**
+	 * Discard random card from player hand.
+	 *
+	 * @param  {Object} 	game
+	 */
 	this.discardRandomCard = function(game) {
 		var index = Math.floor(Math.random()*this.hand.length);
 		var card_to_discard = this.hand[index];
@@ -94,11 +102,20 @@ module.exports = function Player(socket)
 		this.updateClientData({'battlefield': true, 'mana': true, 'hand': true, 'library':true, 'graveyard':true, 'phase': game.current_turn_data.phase, 'health': game.player_one.health});
 	};
 
+	/**
+	 * Place top card of library into graveyard
+	 *
+	 */
 	this.millTopCard = function() {
 		var card_uuid = this.deck.drawCard();
 		this.graveyard.push(card_uuid);
 	};
 
+	/**
+	 * Place top cards of library into graveyard
+	 *
+	 * @param {Integer} num
+	 */
 	this.millTopCards = function(num) {
 		for(var i = 0;i<num;i++)
 		{
@@ -126,9 +143,11 @@ module.exports = function Player(socket)
 	};
 
 	/**
-	 * Tap target card passed through by card unique id.
+	 * Tap target card passed through by card unique id, with option
 	 *
 	 * @param  {String} 	card_uuid
+	 * @param  {Integer} 	option
+	 * @param  {Object} 	game
 	 */
 	this.tapCardOption = function(card_uuid, option, game) {
 		if(typeof this.battlefield[card_uuid] != 'undefined')
@@ -143,6 +162,12 @@ module.exports = function Player(socket)
 		}
 	};
 
+	/**
+	 * Tap target card by effect other than user request.
+	 *
+	 * @param  {String} 	card_uuid
+	 * @param  {Object} 	game
+	 */
 	this.forceTapCard = function(card_uuid, game) {
 		if(typeof this.battlefield[card_uuid] != 'undefined')
 		{
@@ -288,10 +313,20 @@ module.exports = function Player(socket)
 		this.deck.shuffleDeck();
 	};
 
+	/**
+	 * Subtract from player's health.
+	 *
+	 * @param {Integer} num
+	 */
 	this.subtractHealth = function(num) {
 		this.health = this.health - num;
 	};
 
+	/**
+	 * Add to player's health.
+	 *
+	 * @param {Integer} num
+	 */
 	this.addHealth = function(num) {
 		this.health = this.health + num;
 	};
@@ -366,18 +401,33 @@ module.exports = function Player(socket)
 		this.socket.emit('update_data',JSON.stringify(update_json));
 	};
 
+	/**
+	 * Shuffle this player's deck.
+	 */
 	this.getManaPool = function() {
 		return this.mana_pool;
 	};
 
+	/**
+	 * Empty player mana pool
+	 */
 	this.emptyManaPool = function() {
 		this.mana_pool = {'white':0,'blue':0,'black':0,'red':0,'green':0,'colorless':0,'generic':0};
 	};
 
+	/**
+	 * Add mana to player mana pool
+	 *
+	 * @param {String} 	color
+	 * @param {Integer} num
+	 */
 	this.addMana = function(color, num) {
 		this.mana_pool[color] = this.mana_pool[color] + num;
 	};
 
+	/**
+	 * Remove summoning sickness from all player cards
+	 */
 	this.cureAllSummoningSick = function() {
 		for(card_uuid in this.battlefield)
 		{
@@ -387,6 +437,11 @@ module.exports = function Player(socket)
 		}
 	};
 
+	/**
+	 * Convert one player mana to generic mana
+	 *
+	 * @param {String} color
+	 */
 	this.convertManaToGeneric = function(color) {
 		if(this.mana_pool[color] > 0)
 		{
@@ -395,9 +450,14 @@ module.exports = function Player(socket)
 		}
 	};
 
+	/**
+	 * Set player has played land for the turn
+	 *
+	 * @param  {Object} game
+	 */
 	this.didPlayLand = function(game) {
 		game.didPlayLand();
-	}
+	};
 
 	this.init(socket);
 }

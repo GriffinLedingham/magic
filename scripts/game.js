@@ -18,7 +18,6 @@ module.exports = function Game(player_one, player_two)
 
 	this.current_turn;
 	this.current_priority;
-
 	this.current_turn_data = {};
 
 	/**
@@ -124,7 +123,7 @@ module.exports = function Game(player_one, player_two)
 	 * Once this has been done, call update battlefield.
 	 *
 	 * @param  {String} 	card_uuid
-	 * @param  {String} 	option
+	 * @param  {Integer} 	option
 	 * @param  {String} 	user_id
 	 */
 	this.castCardOption = function(card_uuid, option, user_id) {
@@ -132,6 +131,15 @@ module.exports = function Game(player_one, player_two)
 		battlefieldUpdate(user_id, this);
 	};
 
+	/**
+	 * Target player casts card from hand to battlefield, based on passed in
+	 * user ID and unique card ID, with alternate casting cost.
+	 * Once this has been done, call update battlefield.
+	 *
+	 * @param  {String} 	card_uuid
+	 * @param  {Integer} 	option
+	 * @param  {String} 	user_id
+	 */
 	this.castCardAltCost = function(card_uuid, option, user_id) {
 		castPlayerCardAltCost(card_uuid, getPlayerByUserID(user_id, this), option, this);
 		battlefieldUpdate(user_id, this);
@@ -155,11 +163,21 @@ module.exports = function Game(player_one, player_two)
 		endPhase(user_id, this);
 	};
 
+	/**
+	 * Target player converts a single mana from pool to generic.
+	 *
+	 * @param  {String} 	color
+	 * @param  {String} 	user_id
+	 */
 	this.convertMana = function(color, user_id) {
 		getPlayerByUserID(user_id, this).convertManaToGeneric(color);
 		battlefieldUpdate(user_id, this);
 	};
 
+	/**
+	 * Set turn data to have played a land this turn
+	 *
+	 */
 	this.didPlayLand = function() {
 		this.current_turn_data['played_land'] = true;
 	};
@@ -207,8 +225,6 @@ function startTurn(user_id, self) {
 	self.current_turn_data = {};
 
 	untapStep(user_id, self);
-	//drawStep(user_id, self);
-	//upkeepStep(user_id, self);
 
 	getPlayerByUserID(user_id, self).cureAllSummoningSick();
 
@@ -426,6 +442,16 @@ function castPlayerCard(card_uuid, player, self) {
 	}
 }
 
+/**
+ * Cast card from player's hand by user ID and card unique ID, and
+ * with casting option
+ * This is only possible if player has priority.
+ *
+ * @param  {String} 	card_uuid
+ * @param  {Player} 	player
+ * @param  {Integer} 	option
+ * @param  {Game} 		self
+ */
 function castPlayerCardOption(card_uuid, player, option, self) {
 	if(self.current_priority == player.id)
 	{
@@ -433,6 +459,16 @@ function castPlayerCardOption(card_uuid, player, option, self) {
 	}
 }
 
+/**
+ * Cast card from player's hand by user ID and card unique ID, and
+ * with alternate casting cost.
+ * This is only possible if player has priority.
+ *
+ * @param  {String} 	card_uuid
+ * @param  {Player} 	player
+ * @param  {Integer} 	option
+ * @param  {Game} 		self
+ */
 function castPlayerCardAltCost(card_uuid, player, option, self) {
 	if(self.current_priority == player.id)
 	{
