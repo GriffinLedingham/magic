@@ -1,7 +1,6 @@
-node-web-app
-============
+#online tabletop engine
 
-A basic node web app set up with express and socket.io.
+Tabletop Card Game Engine Project, using node.js.
 
 Running:
 ```
