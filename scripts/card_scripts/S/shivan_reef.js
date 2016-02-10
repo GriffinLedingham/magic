@@ -9,12 +9,17 @@ module.exports =
     if(option === 0)
     {
       color = 'red';
+      game.player_one.subtractHealth(1);
     }
     else if(option === 3)
     {
       color = 'colorless';
     }
-    game.player_one.subtractHealth(1);
+    else
+    {
+      game.player_one.subtractHealth(1);
+    }
+
     game.player_one.addMana(color, num);
   },
   getCardChoices: function() {
